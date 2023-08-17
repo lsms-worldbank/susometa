@@ -1,0 +1,27 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# susometa
+
+<!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
+The susometa package provides functions to:
+
+- Parse Survey Solutions’ questionnaire metadata from JSON file to
+  rectangular data frame
+- Extract questionnaire objects and their attributes (e.g., sections,
+  rosters, questions, answer options, etc.)
+
+## Installation
+
+Since susometa is not yet available on CRAN, it can be installed from
+GitHub as follows:
+
+``` r
+if (!require("pak")) install.packages("pak")
+pak::pak("lsms-worldbank/susometa")
+```
