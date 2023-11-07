@@ -45,6 +45,7 @@ extract_values <- function(
         # single- or mult-select
         is_filtered_combo_box = tidyjson::jstring("IsFilteredCombobox"),
         linked_to_roster_id = tidyjson::jstring("LinkedToRosterId"),
+        linked_to_question_id = tidyjson::jstring("LinkedToQuestionId"),
         linked_filter_expression = tidyjson::jstring("LinkedFilterExpression"),        
         # date
         is_timestamp = tidyjson::jstring("IsTimestamp"),
