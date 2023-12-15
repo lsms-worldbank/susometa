@@ -344,13 +344,21 @@ get_answer_options <- function(
         # find attributes for variable of interest
         dplyr::filter(varname == rlang::as_label(rlang::expr({{varname}}))) %>%
         # select columns that capture answer text and values
-        dplyr::select(dplyr::starts_with("answer_text"), dplyr::starts_with("answer_value")) %>%
+        dplyr::select(
+            dplyr::starts_with("answer_text"),
+            dplyr::starts_with("answer_value")
+        ) %>%
         # pivot so that option text and values occupy their own columns
         tidyr::pivot_longer(
             cols = tidyr::everything(),
-            names_to = c(".value", "index"),            # create 1 column per each value found in pattern, named what is found in expression
-            names_pattern = "answer_([a-z]+)_([0-9]+)", # variable names: `answer_text_{n}` and `answer_value_{n}`
-            values_drop_na = TRUE                       # drop rows that contain only NAs--that is, empty answer_text and answer_value columns
+            # create 1 column per each value found in pattern, 
+            # named what is found in expression
+            names_to = c(".value", "index"),
+            # variable names: `answer_text_{n}` and `answer_value_{n}`
+            names_pattern = "answer_([a-z]+)_([0-9]+)", 
+            # drop rows that contain only NAs
+            # that is, empty answer_text and answer_value columns
+            values_drop_na = TRUE
         ) %>%
         # exclude label values
         {if (length(to_exclude) >= 1) filter(., !.data$value %in% to_exclude) else .}
@@ -361,10 +369,12 @@ get_answer_options <- function(
     column_labels <- stats::setNames(
         object = answer_options$text, 
         nm = paste0(
-                # construct variable name from: variable stub name, separator, and value
-                rlang::as_label(rlang::expr({{varname}})),   # variable stub name
-                "__",           # separator
-                # value
+                # construct variable name from: 
+                # - variable stub name
+                rlang::as_label(rlang::expr({{varname}})),  
+                # - separator
+                "__",           
+                # - value
                 # replace negative value (-) with "n"
                 stringr::str_replace(answer_options$value, "-", "n")
             )
