@@ -35,9 +35,9 @@ get_sections <- function(qnr_df) {
         # keep relevant attributes
         dplyr::select(
             # index ID
-            .data$l_0, 
+            l_0, 
             # title
-            .data$title,
+            title,
             # attributes
             tidyselect::any_of(section_attributes)
         )
@@ -151,7 +151,7 @@ get_questions <- function(qnr_df) {
             # index IDs
             dplyr::starts_with("l_"), 
             # name
-            .data$varname,
+            varname,
             # other question properties
             tidyselect::any_of(var_general),
             tidyselect::any_of(var_single_select),
@@ -183,7 +183,7 @@ get_questions_by_section <- function(qnr_df) {
 
     qs_by_section <- sections %>%
         # select common attributes only
-        dplyr::select(.data$title, .data$l_0) %>%
+        dplyr::select(title, l_0) %>%
         # join the variables to the section to which they belong
         dplyr::left_join(questions, by = "l_0") %>%
         # rename vaiables for clarity
