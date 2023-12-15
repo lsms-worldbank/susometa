@@ -129,6 +129,20 @@ var_text <- c(
     "mask"
 )
 
+#' Computed variable attributes
+#' 
+#' @description Attributes of SuSo's computed variables
+#' 
+#' @noRd
+variable_attribs <- c(
+    "type",
+    "label_variable",
+    "public_key",
+    "name_variable",
+    "expression_variable",
+    "do_not_export"
+)
+
 #' Get questons from questionnaire metadata
 #' 
 #' @inheritParams get_sections
@@ -160,6 +174,36 @@ get_questions <- function(qnr_df) {
             tidyselect::any_of(var_date),
             tidyselect::any_of(var_numeric),
             tidyselect::any_of(var_text)
+        )
+
+    return(variables)
+
+}
+
+#' Get SuSo's computed variables from questionnaire metadata
+#' 
+#' @inheritParams get_sections
+#' 
+#' @returns Data frame of questions (`varname`), their JSON indices (`l_*`),
+#' and other question attributes
+#' 
+#' @importFrom dplyr %>% filter select
+#' @importFrom tidyselect any_of
+#' 
+#' @export 
+get_variables <- function(qnr_df) {
+
+    variables <- qnr_df %>%
+        # filter to objects that are of type `Variable`
+        dplyr::filter(type == "Variable") %>%
+        # select attributes relevant for variables
+        dplyr::select(
+            # index IDs
+            dplyr::starts_with("l_"),
+            # name
+            varname,
+            # other question properties
+            tidyselect::any_of(variable_attribs),
         )
 
     return(variables)
