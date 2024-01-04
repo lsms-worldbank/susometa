@@ -84,7 +84,7 @@ var_single_select <- c(
 #' @noRd 
 var_multi_select <- c(
     "answer_order",
-    "are_answered_ordered",
+    "are_answers_ordered",
     "yes_no_view"
 )
 

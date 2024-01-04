@@ -40,7 +40,7 @@ extract_values <- function(
         show_as_list = tidyjson::jlogical("ShowAsList"),
         # multi-select
         answer_order = tidyjson::jnumber("AnswerOrder"),
-        are_answered_ordered = tidyjson::jlogical("AreAnswersOrdered"),
+        are_answers_ordered = tidyjson::jlogical("AreAnswersOrdered"),
         yes_no_view = tidyjson::jlogical("YesNoView"),
         # single- or mult-select
         is_filtered_combo_box = tidyjson::jstring("IsFilteredCombobox"),
