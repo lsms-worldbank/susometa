@@ -151,7 +151,7 @@ variable_attribs <- c(
 #' and other question attributes
 #' 
 #' @importFrom dplyr %>% filter select
-#' @importFrom tidyselect any_of
+#' @importFrom tidyselect any_of matches
 #' 
 #' @export 
 get_questions <- function(qnr_df) {
@@ -160,7 +160,7 @@ get_questions <- function(qnr_df) {
         # filter to objects that are variables
         # namely, entities that have a `question_type`
         dplyr::filter(!is.na(.data$question_type)) %>%
-        # select the variable name
+        # select the attributes
         dplyr::select(
             # index IDs
             dplyr::starts_with("l_"), 
@@ -173,7 +173,8 @@ get_questions <- function(qnr_df) {
             tidyselect::any_of(var_single_or_multiple_select),
             tidyselect::any_of(var_date),
             tidyselect::any_of(var_numeric),
-            tidyselect::any_of(var_text)
+            tidyselect::any_of(var_text),
+            tidyselect::matches("answer_(text|value)_")
         )
 
     return(variables)
