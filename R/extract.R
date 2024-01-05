@@ -97,6 +97,7 @@ var_multi_select <- c(
 var_single_or_multiple_select <- c(
     "is_filtered_combo_box",
     "linked_to_roster_id",
+    "linked_to_question_id",
     "linked_filter_expression"
 )
 
