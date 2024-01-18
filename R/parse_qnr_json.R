@@ -188,6 +188,28 @@ extract_answers <- function(x) {
 
 }
 
+#' Extract information from the `Categories` JSON object
+#' 
+#' @param qnr_json Questionnaire JSON object
+#' 
+#' @import tidyjson
+#' @importFrom dplyr %>%
+#' 
+#' @noRd 
+extract_categories <- function(qnr_json) {
+
+    categories_df <- qnr_json %>%
+        tidyjson::enter_object("Categories") %>%
+        tidyjson::gather_array("l_0") %>%
+        tidyjson::spread_values(
+            id = tidyjson::jstring("Id"),
+            name = tidyjson::jstring("Name")
+        )
+
+    return(categories_df)
+
+}
+
 #' Extract values from a level of nesting
 #' 
 #' In JSON format, Survey Solutions allows up to 9 levels of nesting. 
