@@ -128,7 +128,7 @@ extract_properties <- function(x) {
 #' @import tidyjson
 #' @importFrom tibble as_tibble
 #' @importFrom tidyr pivot_wider
-#' @importFrom dplyr `%>%` select
+#' @importFrom dplyr %>% select
 #' 
 #' @noRd 
 extract_validations <- function(x) {
@@ -218,7 +218,7 @@ extract_categories <- function(qnr_json) {
 #' @param qnr_json Questionnaire JSON object
 #' 
 #' @importFrom tidyjson enter_object gather_array
-#' @importFrom dplyr `%>%`
+#' @importFrom dplyr %>%
 #' 
 #' @noRd 
 qnr_level_0 <- function(qnr_json) {
@@ -394,7 +394,7 @@ qnr_level_10 <- function(qnr_json) {
 #' @param fun Function for extracting attributes: `qnr_level_*`
 #' 
 #' @importFrom rlang enexpr eval_bare
-#' @importFrom dplyr `%>%` left_join
+#' @importFrom dplyr %>% left_join
 #' @importFrom tibble as_tibble
 #' 
 #' @noRd 

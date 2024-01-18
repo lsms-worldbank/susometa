@@ -16,7 +16,7 @@ section_attributes <- c(
 #' @returns Data frame of sections (`title`), (JSON) indices (`l_0`),
 #' and other section attributes
 #' 
-#' @importFrom dplyr `%>%` select
+#' @importFrom dplyr %>% select
 #' @importFrom tidyselect any_of
 #' 
 #' @export 
@@ -35,9 +35,9 @@ get_sections <- function(qnr_df) {
         # keep relevant attributes
         dplyr::select(
             # index ID
-            l_0, 
+            .data$l_0, 
             # title
-            title,
+            .data$title,
             # attributes
             tidyselect::any_of(section_attributes)
         )
@@ -166,7 +166,7 @@ get_questions <- function(qnr_df) {
             # index IDs
             dplyr::starts_with("l_"), 
             # name
-            varname,
+            .data$varname,
             # other question properties
             tidyselect::any_of(var_general),
             tidyselect::any_of(var_single_select),
@@ -197,13 +197,13 @@ get_variables <- function(qnr_df) {
 
     variables <- qnr_df %>%
         # filter to objects that are of type `Variable`
-        dplyr::filter(type == "Variable") %>%
+        dplyr::filter(.data$type == "Variable") %>%
         # select attributes relevant for variables
         dplyr::select(
             # index IDs
             dplyr::starts_with("l_"),
             # name
-            varname,
+            .data$varname,
             # other question properties
             tidyselect::any_of(variable_attribs),
         )
@@ -218,7 +218,7 @@ get_variables <- function(qnr_df) {
 #' 
 #' @returns Data frame of the mapping of variables to sections
 #' 
-#' @importFrom dplyr `%>%` full_join select
+#' @importFrom dplyr %>% full_join select
 #' 
 #' @export 
 get_questions_by_section <- function(qnr_df) {
@@ -229,7 +229,7 @@ get_questions_by_section <- function(qnr_df) {
 
     qs_by_section <- sections %>%
         # select common attributes only
-        dplyr::select(title, l_0) %>%
+        dplyr::select(.data$title, .data$l_0) %>%
         # join the variables to the section to which they belong
         dplyr::left_join(questions, by = "l_0") %>%
         # rename vaiables for clarity
@@ -301,7 +301,7 @@ roster_attribs <- c(
 #' @returns Data frame of roster objects, their JSON indices, 
 #' and attributes
 #' 
-#' @importFrom dplyr filter `%>%` select starts_with
+#' @importFrom dplyr filter %>% select starts_with
 #' @importFrom tidyselect any_of
 #' 
 #' @export 
@@ -328,7 +328,7 @@ get_rosters <- function(qnr_df) {
 #' 
 #' @return Named numeric vector. Values are answer codes. Names are answer labels.
 #' 
-#' @importFrom dplyr `%>%` filter select starts_with
+#' @importFrom dplyr %>% filter select starts_with
 #' @importFrom rlang .data as_label expr
 #' @importFrom tidyr pivot_longer
 #' @importFrom stats setNames
