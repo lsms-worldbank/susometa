@@ -47,6 +47,7 @@ extract_values <- function(
         linked_to_roster_id = tidyjson::jstring("LinkedToRosterId"),
         linked_to_question_id = tidyjson::jstring("LinkedToQuestionId"),
         linked_filter_expression = tidyjson::jstring("LinkedFilterExpression"),        
+        categories_id = tidyjson::jstring("CategoriesId"),
         # date
         is_timestamp = tidyjson::jstring("IsTimestamp"),
         # numeric
