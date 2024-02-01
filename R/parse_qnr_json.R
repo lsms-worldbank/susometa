@@ -47,6 +47,7 @@ extract_values <- function(
         linked_to_roster_id = tidyjson::jstring("LinkedToRosterId"),
         linked_to_question_id = tidyjson::jstring("LinkedToQuestionId"),
         linked_filter_expression = tidyjson::jstring("LinkedFilterExpression"),        
+        categories_id = tidyjson::jstring("CategoriesId"),
         # date
         is_timestamp = tidyjson::jstring("IsTimestamp"),
         # numeric
@@ -127,7 +128,7 @@ extract_properties <- function(x) {
 #' @import tidyjson
 #' @importFrom tibble as_tibble
 #' @importFrom tidyr pivot_wider
-#' @importFrom dplyr `%>%` select
+#' @importFrom dplyr %>% select
 #' 
 #' @noRd 
 extract_validations <- function(x) {
@@ -187,6 +188,28 @@ extract_answers <- function(x) {
 
 }
 
+#' Extract information from the `Categories` JSON object
+#' 
+#' @param qnr_json Questionnaire JSON object
+#' 
+#' @import tidyjson
+#' @importFrom dplyr %>%
+#' 
+#' @noRd 
+extract_categories <- function(qnr_json) {
+
+    categories_df <- qnr_json %>%
+        tidyjson::enter_object("Categories") %>%
+        tidyjson::gather_array("l_0") %>%
+        tidyjson::spread_values(
+            id = tidyjson::jstring("Id"),
+            name = tidyjson::jstring("Name")
+        )
+
+    return(categories_df)
+
+}
+
 #' Extract values from a level of nesting
 #' 
 #' In JSON format, Survey Solutions allows up to 9 levels of nesting. 
@@ -195,7 +218,7 @@ extract_answers <- function(x) {
 #' @param qnr_json Questionnaire JSON object
 #' 
 #' @importFrom tidyjson enter_object gather_array
-#' @importFrom dplyr `%>%`
+#' @importFrom dplyr %>%
 #' 
 #' @noRd 
 qnr_level_0 <- function(qnr_json) {
@@ -371,7 +394,7 @@ qnr_level_10 <- function(qnr_json) {
 #' @param fun Function for extracting attributes: `qnr_level_*`
 #' 
 #' @importFrom rlang enexpr eval_bare
-#' @importFrom dplyr `%>%` left_join
+#' @importFrom dplyr %>% left_join
 #' @importFrom tibble as_tibble
 #' 
 #' @noRd 

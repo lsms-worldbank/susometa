@@ -7,9 +7,13 @@ Description: Extracts data from Survey Solutions' questionnaire and other metada
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
 Imports: 
+    cli,
     dplyr,
+    fs,
+    purrr,
+    readxl,
     rlang,
     stringr,
     tibble,
