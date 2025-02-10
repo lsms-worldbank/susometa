@@ -9,13 +9,16 @@ get_answer_options(qnr_df, varname, to_exclude = NULL)
 \arguments{
 \item{qnr_df}{Data frame returned from \code{parse_questionnaire}}
 
-\item{varname}{Variable name. Bare name of variable whose answer options to extract.}
+\item{varname}{Variable name. Bare name of variable whose answer options to
+extract.}
 
 \item{to_exclude}{Numeric vector. Code of answer options to exclude.}
 }
 \value{
-Named numeric vector. Values are answer codes. Names are answer labels.
+Named numeric vector.
+Values are answer codes. Names are answer labels.
 }
 \description{
-Obtain the answer options for a target variable as a set of name-value pairs in labelled numeric vector.
+Obtain the answer options for a target variable as a set of name-value pairs
+in labelled numeric vector.
 }

@@ -319,22 +319,26 @@ get_rosters <- function(qnr_df) {
 }
 
 #' Get answer options
-#' 
-#' Obtain the answer options for a target variable as a set of name-value pairs in labelled numeric vector.
-#' 
+#'
+#' @description
+#' Obtain the answer options for a target variable as a set of name-value pairs
+#' in labelled numeric vector.
+#'
 #' @param qnr_df Data frame returned from `parse_questionnaire`
-#' @param varname Variable name. Bare name of variable whose answer options to extract.
+#' @param varname Variable name. Bare name of variable whose answer options to
+#' extract.
 #' @param to_exclude Numeric vector. Code of answer options to exclude.
-#' 
-#' @return Named numeric vector. Values are answer codes. Names are answer labels.
-#' 
+#'
+#' @return Named numeric vector.
+#' Values are answer codes. Names are answer labels.
+#'
 #' @importFrom dplyr %>% filter select starts_with
 #' @importFrom rlang .data as_label expr
 #' @importFrom tidyr pivot_longer
+#' @importFrom cli cli_abort
 #' @importFrom stats setNames
-#' @importFrom stringr str_replace
-#' 
-#' @export 
+#'
+#' @export
 get_answer_options <- function(
     qnr_df,
     varname,
@@ -365,21 +369,83 @@ get_answer_options <- function(
         # exclude label values
         {if (length(to_exclude) >= 1) filter(., !.data$value %in% to_exclude) else .}
 
+    if (nrow(answer_options) == 0) {
+
+        cli::cli_abort(
+            message = c(
+                "x" = "No answer options.",
+                "i" = paste(
+                    "After excluding the answers in `to_exclude`,",
+                    "no answer options remain.",
+                    sep = " "
+                )
+            )
+        )
+
+    } else {
+
+        # construct a named numeric vector
+        # - values are answer option codes
+        # - names are answer labels
+        val_lbls <- stats::setNames(
+            object = as.numeric(answer_options$value),
+            nm = answer_options$text
+        )
+
+        return(val_lbls)
+    }
+
+}
+
+#' Get mutli-select answers as variable labels
+#'
+#' @description
+#' When exported, multi-select questions become a set of variables whose
+#' name is a combination of the variable name and answer option value in
+#' Designer. This function extracts answer options in convenient form to
+#' either label variables in data or columns in display tables,
+#' where expected specification for labelling is of the form
+#' `{variable} = {variable label}`.
+#'
+#' @inheritParams get_answer_options
+#'
+#' @return Named character variable.
+#' Names are column names of the form `{variable}__{value}`.
+#' Values are the answer options.
+#'
+#' @importFrom stats setNames
+#' @importFrom rlang as_label expr
+#' @importFrom stringr str_replace_all
+#'
+#' @export
+get_ms_answers_as_var_labels <- function(
+    qnr_df,
+    varname,
+    to_exclude = NULL
+) {
+
+    # extract answer options
+    answer_options <- get_answer_options(
+        qnr_df = qnr_df,
+        varname = {{varname}},
+        to_exclude = to_exclude
+    )
+
     # create named vector, where:
     # - names are variable names
     # - values are text 
     column_labels <- stats::setNames(
-        object = answer_options$text, 
+        object = names(answer_options),
         nm = paste0(
-                # construct variable name from: 
-                # - variable stub name
-                rlang::as_label(rlang::expr({{varname}})),  
-                # - separator
-                "__",           
-                # - value
-                # replace negative value (-) with "n"
-                stringr::str_replace(answer_options$value, "-", "n")
-            )
+            # construct variable name from: 
+            # - variable stub name
+            rlang::as_label(rlang::expr({{varname}})),
+            # - separator
+            "__",
+            # - value
+            # replace negative value (-) with "n"
+            stringr::str_replace_all(unname(answer_options), "-", "n")
+        )
     )
 
     return(column_labels)
