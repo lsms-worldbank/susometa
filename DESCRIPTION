@@ -20,3 +20,5 @@ Imports:
     tidyjson,
     tidyr,
     tidyselect
+URL: https://github.com/lsms-worldbank/susometa
+BugReports: https://github.com/lsms-worldbank/susometa/issues
