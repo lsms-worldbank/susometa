@@ -65,7 +65,8 @@ var_general <- c(
     "instructions",
     "question_type",
     "stata_export_caption",
-    "variable_label"
+    "variable_label",
+    "categories_id"
 )
 
 #' Single-select questions attributes
