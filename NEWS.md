@@ -1,3 +1,18 @@
+# susometa 0.2.0
+
+- Improve `get_answer_options()` in several user-facing ways:
+  -  Draw answers from both the questionnaire JSON and the reusable categories files.
+  - Check that user inputs are complete and correct.
+  - Issue informative error messages if not.
+- Add attributes to the data for several questionnaire objects:
+  - Add `categories_id` to questions data
+  - Add `roster_variable_name`, `condition_expression`, and `hide_if_disabled` to rosters data
+- Perform tests
+  - Add testing infrastructure
+  - Add tests for recently touched functions
+  - Add text fixtures from the Resilient Futures questionnaire for current and future testing.
+- Add LSMS Team as rights holder and funder.
+
 # susometa 0.1.0
 
 Split `get_answer_options()` into two functions:
