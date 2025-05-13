@@ -4,10 +4,12 @@
 \alias{get_answer_options}
 \title{Get answer options}
 \usage{
-get_answer_options(qnr_df, varname, to_exclude = NULL)
+get_answer_options(qnr_df, categories_df = NULL, varname, to_exclude = NULL)
 }
 \arguments{
-\item{qnr_df}{Data frame returned from \code{parse_questionnaire}}
+\item{qnr_df}{Data frame returned from \code{parse_questionnaire()}}
+
+\item{categories_df}{Data frame returned from \code{parse_categories()}}
 
 \item{varname}{Variable name. Bare name of variable whose answer options to
 extract.}

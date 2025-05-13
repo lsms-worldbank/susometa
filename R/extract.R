@@ -324,7 +324,8 @@ get_rosters <- function(qnr_df) {
 #' Obtain the answer options for a target variable as a set of name-value pairs
 #' in labelled numeric vector.
 #'
-#' @param qnr_df Data frame returned from `parse_questionnaire`
+#' @param qnr_df Data frame returned from `parse_questionnaire()`
+#' @param categories_df Data frame returned from `parse_categories()`
 #' @param varname Variable name. Bare name of variable whose answer options to
 #' extract.
 #' @param to_exclude Numeric vector. Code of answer options to exclude.
@@ -332,67 +333,213 @@ get_rosters <- function(qnr_df) {
 #' @return Named numeric vector.
 #' Values are answer codes. Names are answer labels.
 #'
-#' @importFrom dplyr %>% filter select starts_with
+#' @importFrom dplyr %>% filter select starts_with pull if_else
 #' @importFrom rlang .data as_label expr
-#' @importFrom tidyr pivot_longer
+#' @importFrom tidyr pivot_longer everything
 #' @importFrom cli cli_abort
 #' @importFrom stats setNames
 #'
 #' @export
 get_answer_options <- function(
     qnr_df,
+    categories_df = NULL,
     varname,
     to_exclude = NULL
 ) {
 
-    # select answer and value columns from questionnaire data frame
-    answer_options <- qnr_df %>%
-        # find attributes for variable of interest
-        dplyr::filter(varname == rlang::as_label(rlang::expr({{varname}}))) %>%
-        # select columns that capture answer text and values
-        dplyr::select(
-            dplyr::starts_with("answer_text"),
-            dplyr::starts_with("answer_value")
-        ) %>%
-        # pivot so that option text and values occupy their own columns
-        tidyr::pivot_longer(
-            cols = tidyr::everything(),
-            # create 1 column per each value found in pattern, 
-            # named what is found in expression
-            names_to = c(".value", "index"),
-            # variable names: `answer_text_{n}` and `answer_value_{n}`
-            names_pattern = "answer_([a-z]+)_([0-9]+)", 
-            # drop rows that contain only NAs
-            # that is, empty answer_text and answer_value columns
-            values_drop_na = TRUE
-        ) %>%
-        # exclude label values
-        {if (length(to_exclude) >= 1) filter(., !.data$value %in% to_exclude) else .}
+    # capture variable name as text
+    varname_txt <- rlang::as_label(rlang::expr({{varname}}))
 
-    if (nrow(answer_options) == 0) {
+    # check that a variable named `varname` exists
+    varname_exists <- any(qnr_df$varname == varname_txt)
+    if (varname_exists == FALSE) {
+        cli::cli_abort(
+            message = c(
+                "x" = "No variable named {.var {varname_txt}} found.",
+                "i" = "Please check the name of the target variable.",
+                "i" = paste(
+                    "Note: variable names should be specified",
+                    "as they appear in Designer.",
+                    sep = " "
+                )
+            )
+        )
+    }
+
+    # check that the categories data frame exists
+    categories_df_is_df <- is.data.frame(categories_df)
+    if (categories_df_is_df == FALSE) {
 
         cli::cli_abort(
             message = c(
-                "x" = "No answer options.",
+                "x" = "{.arg categories_df} is not a data frame.",
+                "i" = "The function expects a data frame of categories.",
+                sep = " "
+            )
+        )
+    }
+
+    # check that categories data frame is of expected form
+    categories_col_names <- c("categories_id", "value", "text")
+    categories_has_right_names <- all(
+        categories_col_names %in% names(categories_df)
+    )
+    if (categories_has_right_names == FALSE) {
+
+        cli::cli_abort(
+            message = c(
+                "x" = "Categories data frame does not have expected columns.",
                 "i" = paste(
-                    "After excluding the answers in `to_exclude`,",
-                    "no answer options remain.",
+                    "The function expects the data frame produced by",
+                    "{.fn parse_categories},",
+                    "with column names",
+                    "{.var categories_id}, {.var value}, {.var text}.",
+                    sep = " "
+                )
+            )
+        )
+    }
+
+
+    # filter down to metadata for the target variable
+    var_metadata <- qnr_df %>%
+        # find attributes for variable of interest
+        dplyr::filter(varname == varname_txt)
+
+    # determine whether `varname` has answer options and/or categories
+    has_answer_options <- var_metadata |>
+        dplyr::mutate(
+            has_answers = dplyr::if_any(
+                .cols = dplyr::starts_with("answer_value_"),
+                .fns = ~ is.na(.x)
+            )
+        ) |>
+        dplyr::pull(.data$has_answers)
+
+    categories_id_value <- dplyr::pull(var_metadata, .data$categories_id) |>
+        # remove hyphens so that GUID has same format across sources
+        gsub(
+            pattern = "-",
+            replacement = ""
+        )
+    has_reusable_categories <- dplyr::if_else(
+        condition = !is.na(categories_id_value) & (categories_id_value != ""),
+        true = TRUE,
+        false = FALSE,
+        missing = FALSE
+    )
+    
+    # case 1: has answer options only
+    if (has_answer_options == TRUE & has_reusable_categories == FALSE) {
+ 
+        # select answer and value columns from questionnaire data frame
+        answer_options <- var_metadata %>%
+            # select columns that capture answer text and values
+            dplyr::select(
+                dplyr::starts_with("answer_text"),
+                dplyr::starts_with("answer_value")
+            ) %>%
+            # pivot so that option text and values occupy their own columns
+            tidyr::pivot_longer(
+                cols = tidyr::everything(),
+                # create 1 column per each value found in pattern, 
+                # named what is found in expression
+                names_to = c(".value", "index"),
+                # variable names: `answer_text_{n}` and `answer_value_{n}`
+                names_pattern = "answer_([a-z]+)_([0-9]+)", 
+                # drop rows that contain only NAs
+                # that is, empty answer_text and answer_value columns
+                values_drop_na = TRUE
+            ) %>%
+            # exclude label values
+            {if (length(to_exclude) >= 1) filter(., !.data$value %in% to_exclude) else .}
+
+        if (nrow(answer_options) == 0) {
+
+            cli::cli_abort(
+                message = c(
+                    "x" = "No answer options.",
+                    "i" = paste(
+                        "After excluding the answers in {.arg to_exclude},",
+                        "no answer options remain.",
+                        sep = " "
+                    )
+                )
+            )
+
+        } else {
+
+            # construct a named numeric vector
+            # - values are answer option codes
+            # - names are answer labels
+            val_lbls <- stats::setNames(
+                object = as.numeric(answer_options$value),
+                nm = answer_options$text
+            )
+
+            return(val_lbls)
+
+        }
+       
+    # case 2: has reusable categories
+    } else if (
+        # case 2a: has only reusable categories
+        (has_answer_options == FALSE & has_reusable_categories == TRUE) |
+        # case 2b: has only reusable categories and (stale) answer options
+        (has_answer_options == TRUE & has_reusable_categories == TRUE)
+    ) {
+
+        if (is.null(categories_df)) {
+
+            cli::cli_abort(
+                message = c(
+                    "x" = "No categories data frame provided in `categories_df`"
+                )
+            )
+
+        } else {
+
+            var_categories_df <- categories_df |>
+                dplyr::filter(categories_id == categories_id_value)
+            
+            if (nrow(var_categories_df) == 0) {
+
+                cli::cli_abort(
+                    message = c(
+                        "x" = "Categories for `{varname_txt}` not found."
+                    )
+                )
+
+            } else {
+
+            # construct a named numeric vector
+            # - values are answer option codes
+            # - names are answer labels
+            val_lbls <- stats::setNames(
+                object = as.numeric(var_categories_df$value),
+                nm = var_categories_df$text
+            )
+
+            return(val_lbls)
+
+            }
+
+        }
+
+    # case 3: has no answer options, neither answers nor reusable categories
+    } else if (has_answer_options == FALSE & has_reusable_categories == FALSE) {
+
+        cli::cli_abort(
+            message = c(
+                "x" = "No answer options found.",
+                "i" = paste(
+                    "The questionnaire does not have any answer options",
+                    "associated with {.var {varname_txt}}",
                     sep = " "
                 )
             )
         )
 
-    } else {
-
-        # construct a named numeric vector
-        # - values are answer option codes
-        # - names are answer labels
-        val_lbls <- stats::setNames(
-            object = as.numeric(answer_options$value),
-            nm = answer_options$text
-        )
-
-        return(val_lbls)
     }
 
 }
@@ -420,6 +567,7 @@ get_answer_options <- function(
 #' @export
 get_ms_answers_as_var_labels <- function(
     qnr_df,
+    categories_df = NULL,
     varname,
     to_exclude = NULL
 ) {
@@ -428,6 +576,7 @@ get_ms_answers_as_var_labels <- function(
     answer_options <- get_answer_options(
         qnr_df = qnr_df,
         varname = {{varname}},
+        categories_df = categories_df,
         to_exclude = to_exclude
     )
 

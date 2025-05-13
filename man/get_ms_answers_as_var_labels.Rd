@@ -4,10 +4,17 @@
 \alias{get_ms_answers_as_var_labels}
 \title{Get mutli-select answers as variable labels}
 \usage{
-get_ms_answers_as_var_labels(qnr_df, varname, to_exclude = NULL)
+get_ms_answers_as_var_labels(
+  qnr_df,
+  categories_df = NULL,
+  varname,
+  to_exclude = NULL
+)
 }
 \arguments{
-\item{qnr_df}{Data frame returned from \code{parse_questionnaire}}
+\item{qnr_df}{Data frame returned from \code{parse_questionnaire()}}
+
+\item{categories_df}{Data frame returned from \code{parse_categories()}}
 
 \item{varname}{Variable name. Bare name of variable whose answer options to
 extract.}
