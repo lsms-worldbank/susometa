@@ -105,7 +105,7 @@ parse_categories <- function(
 #' 
 #' @return Data frame with the following columns:
 #' 
-#' - `category_id`. GUID used in questionnaire JSON reference a reusable 
+#' - `categories_id`. GUID used in questionnaire JSON reference a reusable 
 #' category.
 #' - `value`. Numerical value input in Designer (e.g., `1`, `2`).
 #' - `text`. Character label input in Designer (e.g., `"Yes"`, `"No"`)

@@ -15,7 +15,7 @@ stored. By default, this is Survey Solutions' storage: \code{"Categories"}.}
 \value{
 Data frame with the following columns:
 \itemize{
-\item \code{category_id}. GUID used in questionnaire JSON reference a reusable
+\item \code{categories_id}. GUID used in questionnaire JSON reference a reusable
 category.
 \item \code{value}. Numerical value input in Designer (e.g., \code{1}, \code{2}).
 \item \code{text}. Character label input in Designer (e.g., \code{"Yes"}, \code{"No"})
