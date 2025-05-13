@@ -290,9 +290,12 @@ roster_attribs <- c(
     "custom_roster_title",
     "roster_size_question_id",
     "roster_size_source",
-    "fixed_roster_titles",
+    "roster_variable_name",
+    # "fixed_roster_titles",
     "roster_title_question_id",
-    "title"
+    "title",
+    "condition_expression",
+    "hide_if_disabled"
 )
 
 #' Get rosters
@@ -517,7 +520,7 @@ get_answer_options <- function(
         } else {
 
             var_categories_df <- categories_df |>
-                dplyr::filter(categories_id == categories_id_value)
+                dplyr::filter(.data$categories_id == categories_id_value)
             
             if (nrow(var_categories_df) == 0) {
 
