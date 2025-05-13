@@ -2,6 +2,34 @@
 # inputs
 # ==============================================================================
 
+testthat::test_that("errors if `varname` is not a bare name", {
+
+  # load input data
+  qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
+  reusable_categories_df <- readRDS(
+    testthat::test_path("fixtures", "reusable_categories_df.rds")
+  )
+
+  # errors for inputs that are not bare names
+  testthat::expect_error(
+    get_answer_options(
+      qnr_df = qnr_df,
+      categories_df = reusable_categories_df,
+      varname = "reason_refusal"
+    ),
+    regexp = "Invalid value provided"
+  )
+
+  testthat::expect_no_error(
+    get_answer_options(
+      qnr_df = qnr_df,
+      categories_df = reusable_categories_df,
+      varname = reason_refusal
+    )
+  )
+
+})
+
 testthat::test_that("errors if questionnaire does not contain variable", {
 
   # load input data

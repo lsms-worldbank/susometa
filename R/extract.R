@@ -347,6 +347,22 @@ get_answer_options <- function(
     to_exclude = NULL
 ) {
 
+    # confirm that variable name is a bare name
+    varname_as_expr <- rlang::enexpr(varname)
+    is_name <- is_bare_name(varname_as_expr)
+
+    if (is_name == FALSE) {
+        cli::cli_abort(
+            message = c(
+                "x" = "Invalid value provided for {.arg varname}.",
+                "i" = paste(
+                    "The function expects a bare variable name",
+                    "(e.g. `varname` instead of {.str varname})."
+                )
+            )
+        )
+    }
+
     # capture variable name as text
     varname_txt <- rlang::as_label(rlang::expr({{varname}}))
 
