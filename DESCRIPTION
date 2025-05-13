@@ -2,7 +2,16 @@ Package: susometa
 Title: Extract Data from Survey Solutions' Metadata
 Version: 0.1.0
 Authors@R: 
-    person("Arthur", "Shaw", , "jashaw2002@gmail.com", role = c("aut", "cre"))
+    c(
+        person(
+            "Arthur", "Shaw", , "jashaw2002@gmail.com",
+            role = c("aut", "cre")
+        ),
+        person(
+            "LSMS Team, World Bank Group",
+            role = c("cph", "fnd")
+        )
+    )
 Description: Extracts data from Survey Solutions' questionnaire and other metadata.
 License: MIT + file LICENSE
 Encoding: UTF-8
