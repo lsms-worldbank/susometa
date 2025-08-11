@@ -1,3 +1,9 @@
+# susometa 0.3.0
+
+- Add `get_validations()` to return a data frame of validations and the objects to which they are associated.
+- Add fixed roster titles to the questionnaire attributes extracted by `parse_questionnaire()`
+- Add fixed roster titles and values to the return value of `get_rosters()`
+
 # susometa 0.2.0
 
 - Improve `get_answer_options()` in several user-facing ways:
