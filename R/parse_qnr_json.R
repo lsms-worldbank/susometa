@@ -155,6 +155,42 @@ extract_validations <- function(x) {
 
 }
 
+#' Extract information from `FixedRosterTitles` JSON object
+#' 
+#' Extracts fixed roster titles into rectangular format.
+#' In the JSON object, `FixedRosterTitles` is an array, and needs to be
+#' "rectangled" with this function.
+#' 
+#' @param x JSON object
+#' 
+#' @import tidyjson
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr pivot_wider
+#' @importFrom dplyr %>% select
+#' 
+#' @noRd 
+extract_fixed_roster_titles <- function(x) {
+
+    x %>% 
+    tidyjson::enter_object("FixedRosterTitles") %>% 
+    tidyjson::gather_array("fixed_roster") %>% 
+    tidyjson::spread_values(
+        fixed_roster_value = tidyjson::jnumber("Value"), 
+        fixed_roster_title = tidyjson::jstring("Title") 
+    ) %>% 
+    tibble::as_tibble() %>%
+    {if (nrow(.) > 0)
+        tidyr::pivot_wider(., 
+            id_cols = .data$public_key,
+            names_from = c(.data$fixed_roster, .data$fixed_roster),
+            values_from = c(.data$fixed_roster_value, .data$fixed_roster_title)
+        ) 
+    else
+        dplyr::select(., .data$public_key)
+    }
+
+}
+
 #' Extract information from the `answers` JSON object
 #' 
 #' In the SuSo questionnaire, `answers` is an array that needs to be "rectangled". This function does just that. 
@@ -417,11 +453,21 @@ extract_level <- function(
     # validation conditions
     lvl_validations <- lvl_attributes %>% extract_validations()
 
+    # fixed roster titles
+    lvl_fixed_roster <- lvl_attributes %>% extract_fixed_roster_titles()
+
     # combine all attributes to form extracted attributes from that level
     level <- lvl_attributes %>%
         {if (nrow(lvl_properties) > 0 ) dplyr::left_join(., lvl_properties, by = "public_key") else .} %>%
         {if (nrow(lvl_answers) > 0) dplyr::left_join(., lvl_answers, by = "public_key") else .} %>%
         {if (nrow(lvl_validations) > 0) dplyr::left_join(., lvl_validations, by = "public_key") else .} %>%      
+        {
+            if (nrow(lvl_fixed_roster) > 0) {
+                dplyr::left_join(., lvl_fixed_roster, by = "public_key")
+             } else {
+             .
+             }
+        } %>%      
         tibble::as_tibble()
     
     return(level)

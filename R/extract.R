@@ -291,7 +291,6 @@ roster_attribs <- c(
     "roster_size_question_id",
     "roster_size_source",
     "roster_variable_name",
-    # "fixed_roster_titles",
     "roster_title_question_id",
     "title",
     "condition_expression",
@@ -317,7 +316,9 @@ get_rosters <- function(qnr_df) {
         # keep relevant attributes
         dplyr::select(
             dplyr::starts_with("l_"), 
-            tidyselect::any_of(roster_attribs)
+            tidyselect::any_of(roster_attribs),
+            dplyr::starts_with("fixed_roster_value_"),
+            dplyr::starts_with("fixed_roster_title_")
         )
 
 }

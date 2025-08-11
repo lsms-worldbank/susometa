@@ -25,7 +25,18 @@ testthat::test_that("get_rosters() returns data frame with expected columns", {
 
   # has expected attributes
   testthat::expect_true(
-    all(susometa:::roster_attribs %in% roster_col_names)
+    all(
+      c(
+        susometa:::roster_attribs,
+        # this will not be the case in general
+        # but for the JSON used as text fixture, there is a fixed roster
+        "fixed_roster_value_1", "fixed_roster_title_1"
+      )
+
+      %in%
+
+      roster_col_names
+    )
   )
 
 })
