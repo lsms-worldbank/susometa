@@ -643,6 +643,8 @@ get_ms_answers_as_var_labels <- function(
 #' - `severity`. Severity level of the validation. Values of 0 denote an error
 #' while values of 1 denote a warning.
 #'
+#' @export
+#'
 #' @importFrom dplyr %>% filter select starts_with
 #' @importFrom tidyr pivot_longer
 get_validations <- function(
