@@ -620,3 +620,70 @@ get_ms_answers_as_var_labels <- function(
     return(column_labels)
 
 }
+
+#' Get validations from questionnaire metadata
+#'
+#' @param qnr_df Data frame produced by `susopara::parse_questionnaire()`
+#'
+#' @return Data frame of validated objects and their validation. Objects with
+#' validations include questions and static text. The validation information
+#' returned in the data frame is:
+#' - `type`. Question type drawn directly from the JSON file.
+#' - `varname`. Variable name. Present only for questions.
+#' - `text`. Question text or static text. For static text objects, this
+#' may serve as  practical identifier, for lack of the equivalent of a
+#' unique variable name.
+#' - `expression_number`. Sequential ID number of the validation defined by
+#' Designer.
+#' - `validation_expression`. Expression provided in the `validation condition`
+#' field in Designer.
+#' - `expression_message`. Text composed in the `error or warning message`
+#' field in Designer
+#' - `severity`. Severity level of the validation. Values of 0 denote an error
+#' while values of 1 denote a warning.
+#'
+#' @importFrom dplyr %>% filter select starts_with
+#' @importFrom tidyr pivot_longer
+get_validations <- function(
+  qnr_df
+) {
+
+  n_validations_in_qnr <- qnr_df %>%
+    dplyr::filter(
+      !(
+        .data$validation_expression_1 == "" |
+        is.na(.data$validation_expression_1)
+      )
+    ) %>%
+	nrow()
+
+  if (n_validations_in_qnr == 0) {
+    cli::cli_abort(
+      messages = c(
+        "x" = "The questionnaire does not contain any validations."
+      )
+    )
+  }
+
+  validations <- qnr_df %>%
+    dplyr::filter(
+      !(
+        .data$validation_expression_1 == "" |
+        is.na(.data$validation_expression_1)
+      )
+    ) %>%
+    dplyr::select(
+      .data$type, .data$varname, .data$text,
+      dplyr::starts_with("validation_"), starts_with("severity_")
+    ) %>%
+    tidyr::pivot_longer(
+      cols = c(
+        dplyr::starts_with("validation_"),
+        dplyr::starts_with("severity_")
+      ),
+      names_pattern = "(.+?)_([0-9]+)",
+      names_to = c(".value", "expression_number"),
+      values_drop_na = TRUE
+    )
+
+}
