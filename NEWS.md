@@ -1,3 +1,7 @@
+# susometa 0.3.1
+
+Export `get_validations()`, a critical step somehow overlooked in the last release.
+
 # susometa 0.3.0
 
 - Add `get_validations()` to return a data frame of validations and the objects to which they are associated.
