@@ -138,6 +138,7 @@ var_text <- c(
 #' @noRd
 variable_attribs <- c(
     "type",
+    "type_variable",
     "label_variable",
     "public_key",
     "name_variable",
