@@ -208,6 +208,9 @@ get_variables <- function(qnr_df) {
             .data$varname,
             # other question properties
             tidyselect::any_of(variable_attribs),
+        ) %>%
+        labelled::set_value_labels(
+            type_variable = variable_type_lbls
         )
 
     return(variables)
