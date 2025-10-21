@@ -447,13 +447,14 @@ get_answer_options <- function(
             pattern = "-",
             replacement = ""
         )
+
     has_reusable_categories <- dplyr::if_else(
         condition = !is.na(categories_id_value) & (categories_id_value != ""),
         true = TRUE,
         false = FALSE,
         missing = FALSE
     )
-    
+
     # case 1: has answer options only
     if (has_answer_options == TRUE & has_reusable_categories == FALSE) {
  
