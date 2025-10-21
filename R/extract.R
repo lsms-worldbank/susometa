@@ -253,10 +253,10 @@ get_questions_by_section <- function(qnr_df) {
 #' 
 #' @noRd 
 variable_type_lbls <- c(
-    `Boolean` = 1,
+    `Long Integer` = 1,
     `Double` = 2,
-    `Date/Time` = 3,
-    `Long Integer` = 4,
+    `Boolean` = 3,
+    `Date/Time` = 4,
     `String` = 5
 )
 
