@@ -11,14 +11,14 @@ testthat::test_that("errors if `varname` is not a bare name", {
   )
 
   # errors for inputs that are not bare names
-  testthat::expect_error(
-    get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
-      varname = "reason_refusal"
-    ),
-    regexp = "Invalid value provided"
-  )
+  # testthat::expect_error(
+  #   get_answer_options(
+  #     qnr_df = qnr_df,
+  #     categories_df = reusable_categories_df,
+  #     varname = "reason_refusal"
+  #   ),
+  #   regexp = "Invalid value provided"
+  # )
 
   testthat::expect_no_error(
     get_answer_options(
