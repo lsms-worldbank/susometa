@@ -193,6 +193,7 @@ get_questions <- function(qnr_df) {
 #' 
 #' @importFrom dplyr %>% filter select
 #' @importFrom tidyselect any_of
+#' @importFrom labelled set_value_labels
 #' 
 #' @export 
 get_variables <- function(qnr_df) {
