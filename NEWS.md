@@ -1,3 +1,11 @@
+# susometa 0.3.2
+
+- Revert check that `varname` parameter in `get_answer_options` is a bare name, since not working correctly when called by other functions.
+- Add variable type attributes extracted for computed varaibles.
+  - Add variable type attributes to those exported
+  - Correct labels for variable types (e.g., Boolean, string, etc.)
+  - Apply labels to variable type
+
 # susometa 0.3.1
 
 Export `get_validations()`, a critical step somehow overlooked in the last release.
