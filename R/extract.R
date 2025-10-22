@@ -166,9 +166,9 @@ get_questions <- function(qnr_df) {
         # select the attributes
         dplyr::select(
             # index IDs
-            dplyr::starts_with("l_"), 
+            dplyr::starts_with("l_"),
             # name
-            .data$varname,
+            varname,
             # other question properties
             tidyselect::any_of(var_general),
             tidyselect::any_of(var_single_select),
@@ -681,7 +681,7 @@ get_validations <- function(
       )
     ) %>%
     dplyr::select(
-      .data$type, .data$varname, .data$text,
+      type, varname, text,
       dplyr::starts_with("validation_"), starts_with("severity_")
     ) %>%
     tidyr::pivot_longer(
