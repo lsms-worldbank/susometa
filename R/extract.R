@@ -63,6 +63,76 @@ get_sections <- function(json_path) {
 
 }
 
+#' Get metadata for sub-sections
+#'
+#' @description
+#' Extract metadata about sub-sections from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `sub-section`.
+#' - `type`. Character. SuSo provided object type. Value: Group.
+#' - `title`. Character.
+#' - `variable_name`. Character.
+#' - `condition_expression`. Character.
+#' - `public_key`. Character. GUID.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_sub_sections <- function(json_path) {
+
+  check_json_path(path = json_path)
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_rename_group_attribs,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    '[
+        # move into document content
+        .Children[]
+        # select sections
+        | select(."$type" == "Group" and .IsRoster == false)
+        # find sub-sections within those sections
+        # descending until one is found
+        | .Children[]
+        | ..
+        | objects
+        | select(."$type" == "Group" and .IsRoster == false)
+        # remove children of the sub-section
+        | del(.Children)
+        # delete attributes that are irrelevant for sections
+        | del(
+            # roster attributes
+            .IsFlatMode, .IsPlainMode, .DisplayMode,
+            .IsRoster, .CustomRosterTitle, .RosterSizeSource,
+            .RosterSizeQuestionId, .RosterTitleQuestionId, .FixedRosterTitles,
+            # other attributes
+            .Description, .HideIfDisabled, .Enabled
+        )
+        # rename attributes
+        # ... known sub-section attributes
+        | rename_group_attribs
+        # ... unknown other attributes from Pascal to snake case
+        | rename_from_pascal_to_snake_case
+        # add object type attribute
+        | . + { "object_type" : "sub-section" }
+    ]'
+  )
+
+  sub_sections_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  sub_sections_df <- jsonlite::fromJSON(sub_sections_json)
+
+}
+
+
 #' General attributes of questions
 #' 
 #' @description Attributes that are common to all question types
