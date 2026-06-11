@@ -2,17 +2,38 @@
 % Please edit documentation in R/extract.R
 \name{get_rosters}
 \alias{get_rosters}
-\title{Get rosters}
+\title{Get metadata about rosters.}
 \usage{
-get_rosters(qnr_df)
+get_rosters(json_path)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
 }
 \value{
-Data frame of roster objects, their JSON indices,
-and attributes
+Data frame with the following columns:
+\itemize{
+\item \code{object_type}. Character. Simplified object type. Value: \code{roster}.
+\item \code{type}. Character. SuSo-provided object type. Value: \code{Group}.
+\item \code{condition_expression}
+\item \code{hide_if_disabled}
+\item \code{is_flat_mode}
+\item \code{is_plain_mode}
+\item \code{display_mode}
+\item \code{enabled}
+\item \code{description}
+\item \code{varname}
+\item \code{is_roster}
+\item \code{custom_roster_title}
+\item \code{roster_size_question_id}
+\item \code{roster_size_source}
+\item \code{public_key}
+\item \code{title}
+\item \verb{fixed_roster_title_*}
+\item \verb{fixed_roster_value_*}
+}
 }
 \description{
-Get rosters
+Extract metadata about rosters from the questionnaire JSON
+as a data frame.
 }

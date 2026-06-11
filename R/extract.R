@@ -132,6 +132,78 @@ get_sub_sections <- function(json_path) {
 
 }
 
+#' Get metadata about rosters.
+#'
+#' @description
+#' Extract metadata about rosters from the questionnaire JSON
+#' as a data frame.
+#' 
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `roster`.
+#' - `type`. Character. SuSo-provided object type. Value: `Group`.
+#' - `condition_expression`
+#' - `hide_if_disabled`
+#' - `is_flat_mode`
+#' - `is_plain_mode`
+#' - `display_mode`
+#' - `enabled`
+#' - `description`
+#' - `varname`
+#' - `is_roster`
+#' - `custom_roster_title`
+#' - `roster_size_question_id`
+#' - `roster_size_source`
+#' - `public_key`
+#' - `title`
+#' - `fixed_roster_title_*`
+#' - `fixed_roster_value_*`
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_rosters <- function(json_path) {
+
+  check_json_path(path = json_path)
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_def_flatten_fixed_roster_titles,
+    jq_rename_group_attribs,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    '
+    [ 
+      # collect all rosters
+      ..
+      | objects
+      | select(.IsRoster == true)
+      # remove their children
+      | del(.Children)
+      # flatten fixed roster titles
+      | flatten_fixed_roster_titles 
+      # rename keys
+      # ... known keys
+      | rename_group_attribs
+      # ... unknown keys from Pascal to snake case
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type" : "roster" }
+    ]
+    '
+  )
+
+  rosters_json <- jqr::jq(
+    x = base::file(json_path),
+    jq_expr
+  )
+
+  rosters_df <- jsonlite::fromJSON(rosters_json)
+
+}
 
 #' General attributes of questions
 #' 
@@ -365,55 +437,6 @@ question_type_lbls <- c(
     # 8?
     `List` = 9 # TextListQuestion
 )
-
-#' Roster attributes
-#' 
-#' @description Attributes that are describe rosters
-#' 
-#' @noRd 
-roster_attribs <- c(
-    "public_key",
-    "is_flat_mode",
-    "is_plain_mode",
-    "display_mode",
-    "enabled",
-    "description",
-    "is_roster",
-    "custom_roster_title",
-    "roster_size_question_id",
-    "roster_size_source",
-    "roster_variable_name",
-    "roster_title_question_id",
-    "title",
-    "condition_expression",
-    "hide_if_disabled"
-)
-
-#' Get rosters
-#' 
-#' @inheritParams get_sections
-#' 
-#' @returns Data frame of roster objects, their JSON indices, 
-#' and attributes
-#' 
-#' @importFrom dplyr filter %>% select starts_with
-#' @importFrom tidyselect any_of
-#' 
-#' @export 
-get_rosters <- function(qnr_df) {
-
-    roster_df <- qnr_df %>%
-        # keep roster objects
-        dplyr::filter(.data$is_roster == TRUE) %>%
-        # keep relevant attributes
-        dplyr::select(
-            dplyr::starts_with("l_"), 
-            tidyselect::any_of(roster_attribs),
-            dplyr::starts_with("fixed_roster_value_"),
-            dplyr::starts_with("fixed_roster_title_")
-        )
-
-}
 
 #' Get answer options
 #'

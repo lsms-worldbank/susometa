@@ -51,6 +51,23 @@ check_json_path <- function(
 
 }
 
+#' jq expression to flatten fixed roster titles
+#'
+#' @noRd
+jq_def_flatten_fixed_roster_titles <- '
+def flatten_fixed_roster_titles:
+  . + (
+    [range(.FixedRosterTitles | length) as $i |
+      {
+        ("fixed_roster_title_\\($i + 1)"): .FixedRosterTitles[$i].Title,
+        ("fixed_roster_value_\\($i + 1)"): (.FixedRosterTitles[$i].Value | tonumber)
+      }
+    ] | add // {}
+  )
+  | del(.FixedRosterTitles)
+;
+'
+
 #' jq expression to rename keys from PascalCase to snake_case
 #'
 #' @noRd
