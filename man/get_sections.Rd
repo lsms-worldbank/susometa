@@ -2,17 +2,26 @@
 % Please edit documentation in R/extract.R
 \name{get_sections}
 \alias{get_sections}
-\title{Get sections from questionnaire metadata}
+\title{Get metadata for section.}
 \usage{
-get_sections(qnr_df)
+get_sections(json_path)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
 }
 \value{
-Data frame of sections (\code{title}), (JSON) indices (\code{l_0}),
-and other section attributes
+Data frame with the following columns:
+\itemize{
+\item \code{object_type}. Character. Simplified object type. Value: \code{section}.
+\item \code{type}. Character. SuSo-provided type. Value: \code{Group.}
+\item \code{title}. Character.
+\item \code{varname}. Character.
+\item \code{condition_expression}. Character.
+\item \code{public_key}. Character. GUID.
+}
 }
 \description{
-Get sections from questionnaire metadata
+Extract metadata about sections from the questionnaire JSON
+as a data frame.
 }

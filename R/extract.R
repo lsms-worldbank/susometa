@@ -1,48 +1,65 @@
-#' Section attributes
-#' 
-#' @description Attributes that are valid for sections in SuSo
-#' 
-#' @noRd 
-section_attributes <- c(
-    "condition_expression",
-    "variable_name",
-    "public_key"
-)
+#' Get metadata for section.
+#'
+#' @description
+#' Extract metadata about sections from the questionnaire JSON
+#' as a data frame.
+#'
+#' @param json_path Character. Full path to the Survey Solutions questionnaire
+#' JSON file (e.g., `~/my_proj/path/to/document.json`).
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `section`.
+#' - `type`. Character. SuSo-provided type. Value: `Group.`
+#' - `title`. Character.
+#' - `varname`. Character.
+#' - `condition_expression`. Character.
+#' - `public_key`. Character. GUID.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_sections <- function(json_path) {
 
-#' Get sections from questionnaire metadata
-#' 
-#' @param qnr_df Data frame produced by `susopara::parse_questionnaire()`
-#' 
-#' @returns Data frame of sections (`title`), (JSON) indices (`l_0`),
-#' and other section attributes
-#' 
-#' @importFrom dplyr %>% select
-#' @importFrom tidyselect any_of
-#' 
-#' @export 
-get_sections <- function(qnr_df) {
+  check_json_path(path = json_path)
 
-    sections <- qnr_df %>%
-        # keep sections, defined as:
-        # - a group
-        # - without any child index
-        dplyr::filter(
-            .data$type == "Group" &
-            is.na(.data$l_1)
-        ) %>%
-        # order by index
-        dplyr::arrange(.data$l_0) %>%
-        # keep relevant attributes
-        dplyr::select(
-            # index ID
-            .data$l_0, 
-            # title
-            .data$title,
-            # attributes
-            tidyselect::any_of(section_attributes)
-        )
+  jq_expr <-
+    paste0(
+      # function definitions
+      jq_rename_group_attribs,
+      jq_rename_from_pascal_to_snake_case,
+      # query
+      '[
+      # take the immediate children of the document: the sections
+      .Children[]
+      # select children whose type is group: sections
+      | select(."$type" == "Group")
+      # drop their immediate children (e.g., questions, rosters, etc)
+      | del(.Children)
+      # delete attributes that are irrelevant for sections
+      | del(
+        # roster attributes
+        .IsFlatMode, .IsPlainMode, .DisplayMode,
+        .IsRoster, .CustomRosterTitle, .RosterSizeSource,
+        .RosterSizeQuestionId, .RosterTitleQuestionId, .FixedRosterTitles,
+        # other attributes
+        .Description, .HideIfDisabled, .Enabled
+      )
+      # rename known attributes
+      | rename_group_attribs
+      # rename all other attributes with snake case
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type" : "section" }
+      ]'
 
-    return(sections)
+    )
+
+  sections_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  sections_df <- jsonlite::fromJSON(sections_json)
 
 }
 
