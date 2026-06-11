@@ -21,13 +21,14 @@ Imports:
     cli,
     dplyr,
     fs,
+    jqr,
+    jsonlite,
     labelled,
     purrr,
     readxl,
     rlang,
     stringr,
     tibble,
-    tidyjson,
     tidyr,
     tidyselect
 URL: https://github.com/lsms-worldbank/susometa
