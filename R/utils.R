@@ -15,6 +15,42 @@ is_bare_name <- function(x) {
     return(is_name)
 
 }
+
+#' Check the path provided for the Survey Solutions questionnaire JSON
+#'
+#' @param path Character. Full path to the file.
+#'
+#' @return Side-effect of throwing an error.
+#'
+#' @importFrom rlang caller_env
+#' @importFrom fs file_exists path_ext
+#' @importFrom cli cli_abort
+#'
+#' @noRd
+check_json_path <- function(
+  path,
+  call = rlang::caller_env()
+) {
+
+  # path exists
+  if (!fs::file_exists(path)) {
+    cli::cli_abort(
+      message = "The path provided does not exist.",
+      call = call
+    )
+  }
+
+  # file is json
+  if (fs::path_ext(path) != "json") {
+    cli::cli_abort(
+      message =
+        "The path provided does not point to a file with `.json` extension.",
+      call = call
+    )
+  }
+
+}
+
 #' jq expression to rename keys from PascalCase to snake_case
 #'
 #' @noRd
