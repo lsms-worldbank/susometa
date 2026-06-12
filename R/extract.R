@@ -1278,3 +1278,82 @@ get_translations <- function(json_path) {
   translations_df <- jsonlite::fromJSON(translations_json)
 
 }
+
+#' Get metadata on attachments
+#' 
+#' @description
+#' Extract metadata about attachments from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `attachment`.
+#' - `type`. Character. Value: `"Attachment"`.
+#' - `attachment_id`. Character. GUID for the translation.
+#' - `attachment_name`. Character. User-provided name for the attachment. This is how
+#' Designer fields refer to it.
+#' - `attachment_content_id`. Character. System-provided GUID for files in `Attachments`
+#'
+#' @importFrom jqr jq
+#' @importFrom cli cli_abort
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_attachments <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # check whether targets are present in the JSONS
+  # ============================================================================
+
+  # check target
+  attachments_exist <- base::file(json_path) |>
+    jqr::jq('any(.Attachments; length > 0)') |>
+    jsonlite::fromJSON()
+
+  if (attachments_exist == FALSE) {
+    cli::cli_abort(
+      message = c(
+        "x" = "No attachments found for this questionnaire."
+      )
+    )
+  }
+
+  # ============================================================================
+  # compose query
+  # ============================================================================
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_def_rename_attachments,
+    jq_rename_from_pascal_to_snake_case,
+    '[
+      # select top-level attachments key
+      .Attachments[]
+      # rename keys
+      # ... for known keys
+      | rename_attachments 
+      # ... for unknown keys, from Pascal to snake case
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type" : "attachments" }
+    ] '
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  attachments_df <- base::file(json_path) |>
+    jqr::jq(jq_expr) |>
+    jsonlite::fromJSON()
+
+}

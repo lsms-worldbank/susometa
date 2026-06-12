@@ -390,6 +390,28 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of attachments
+#'
+#' @noRd
+jq_def_rename_attachments <- '
+def rename_attachments:
+{
+  # from ... to
+  "$type": "type",
+  "AttachmentId": "attachment_id",
+  "Name": "attachment_name",
+  "ContentId": "attachment_content_id",
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key
