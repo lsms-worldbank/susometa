@@ -1209,3 +1209,72 @@ get_categories <- function(json_path) {
   categories_df <- jsonlite::fromJSON(categories_json)
 
 }
+
+#' Get metadata about translations.
+#'
+#' @description
+#' Extract metadata about translations from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#' 
+#' - `object_type`. Character. Simplified object type. Value: `translation`.
+#' - `$type`. Character. May not be present in older JSON files.
+#' - `Id`. Character.
+#' - `Name`. Character.
+#'
+#' @importFrom jqr jq
+#' @importFrom cli cli_abort
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_translations <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # check whether targets are present in the JSONS
+  # ============================================================================
+
+  # check whether any translations exist
+  translations_exist <- base::file(json_path) |>
+    jqr::jq('any(.Translations; length > 0)') |>
+    jsonlite::fromJSON()
+
+  if (translations_exist == FALSE){
+    cli::cli_abort(
+      message = c(
+        "x" = "No translations found in the questionnaire."
+      )
+    )
+  }
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  translations_json <- base::file(json_path) |>
+    jqr::jq(
+      paste0(
+        # function definitions
+        jq_def_rename_type,
+        '
+        .Translations
+        # rename `$type` key to `type`
+        | map(rename_type)
+        # add object type attribute
+        | map(. + { "object_type": "translation" })
+        '
+      )
+    )
+
+  translations_df <- jsonlite::fromJSON(translations_json)
+
+}
