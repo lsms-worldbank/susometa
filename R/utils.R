@@ -368,6 +368,28 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of macros
+#'
+#' @noRd
+jq_def_rename_macros <- '
+def rename_macros:
+{
+  # from ... to
+  "$type": "type",
+  "Name": "macro_name",
+  "Description": "macro_description",
+  "Content": "macro_content",
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key

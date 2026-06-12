@@ -1067,3 +1067,82 @@ get_static_texts <- function(json_path) {
   static_texts_df <- jsonlite::fromJSON(static_texts_json)
 
 }
+
+#' Get metadata for macros.
+#'
+#' @description 
+#' Extract metadata about macros from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Type of object. Value: `macro`.
+#' - `type`. Character. SuSo-provided object type. Value: `Macro`.
+#' May not be present in older JSON versions.
+#' - `macro_id`. Character.
+#' - `macro_name`. Character.
+#' - `macro_description`. Character.
+#' - `macro_content`. Character.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_macros <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # compose expression
+  # ============================================================================
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_def_rename_macros,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    '
+    # select top-level macros
+    .Macros
+    # remove `$type` key-value pair that begins the list of macro objects, if present
+    # note: `del()` has no effect the key-value pair is not present
+    | del(."$type")
+    # note: each macro object is structured as follows:
+    # "name_is_some_guid": { "$type": "type", "key1": "value1", "key2": "value2" }
+    #
+    # restructure the macro array so that it consists of a key and value entries
+    # as follows:
+    # [ "key": .key, "value": .value ]
+    # where `.value` is the initial content of each element in the macro array
+    | to_entries
+    # restructure each element of the macro array as follows:
+    # [ "macro_id": .key, .value ]
+    # where `.value` is the value of the initial macro array
+    | map({ macro_id: .key } + .value)
+    # rename
+    # ... for known properties
+    | map(rename_macros)
+    # ... for unknown properties, from Pascal to snake case
+    | map(rename_from_pascal_to_snake_case)
+    # add object type attribute
+    | map(. + { "object_type" : "macro" })
+    '
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  macros_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  macros_df <- jsonlite::fromJSON(macros_json)
+
+}
