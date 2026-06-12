@@ -1146,3 +1146,66 @@ get_macros <- function(json_path) {
   macros_df <- jsonlite::fromJSON(macros_json)
 
 }
+
+#' Get metadata on categories.
+#'
+#' @description
+#' Extract metadata about categories from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `reusable category`.
+#' - `$type`. Character. May not be present in older JSON files.
+#' - `Id`. Character.
+#' - `Name`. Character.
+#' 
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#' @importFrom cli cli_abort
+#'
+#' @export
+get_categories <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # check whether targets are present in the JSONS
+  # ============================================================================
+
+  # check whether any categories exist
+  categories_exist <- base::file(json_path) |>
+    jqr::jq('any(.Categories; length > 0)') |>
+    jsonlite::fromJSON()
+
+  if (categories_exist == FALSE){
+    cli::cli_abort(
+      message = c(
+        "x" = "No reusable categories found in the questionnaire."
+      )
+    )
+  }
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  categories_json <- jqr::jq(
+    x = base::file(json_path),
+    '
+    .Categories
+    # add object type attribute
+    | map(. + { "object_type": "reusable category" })
+    '
+  )
+
+  categories_df <- jsonlite::fromJSON(categories_json)
+
+}
