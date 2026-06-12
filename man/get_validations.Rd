@@ -2,33 +2,28 @@
 % Please edit documentation in R/extract.R
 \name{get_validations}
 \alias{get_validations}
-\title{Get validations from questionnaire metadata}
+\title{Get metadata for validations}
 \usage{
-get_validations(qnr_df)
+get_validations(json_path)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
 }
 \value{
-Data frame of validated objects and their validation. Objects with
-validations include questions and static text. The validation information
-returned in the data frame is:
+Data frame with following columns:
 \itemize{
-\item \code{type}. Question type drawn directly from the JSON file.
-\item \code{varname}. Variable name. Present only for questions.
-\item \code{text}. Question text or static text. For static text objects, this
-may serve as  practical identifier, for lack of the equivalent of a
-unique variable name.
-\item \code{expression_number}. Sequential ID number of the validation defined by
-Designer.
-\item \code{validation_expression}. Expression provided in the \verb{validation condition}
-field in Designer.
-\item \code{expression_message}. Text composed in the \verb{error or warning message}
-field in Designer
-\item \code{severity}. Severity level of the validation. Values of 0 denote an error
-while values of 1 denote a warning.
+\item \code{public_key}. Character. GUID of object. Not available for static text.
+\item \code{object_type}. Character. Simplified object type. Value: \code{section}.
+\item \code{type}. Character.
+\item \code{varname}. Character.
+\item \code{text}. Character.
+\item \code{expression_number}. Numeric.
+\item \code{validation_message}. Character.
+\item \code{validation_expression}. Character.
+\item \code{severity}. Numeric.
 }
 }
 \description{
-Get validations from questionnaire metadata
+Get metadata for validations
 }

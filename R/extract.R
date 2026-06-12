@@ -931,71 +931,68 @@ get_ms_answers_as_var_labels <- function(
 
 }
 
-#' Get validations from questionnaire metadata
+#' Get metadata for validations
 #'
-#' @param qnr_df Data frame produced by `susopara::parse_questionnaire()`
+#' @inheritParams get_sections
 #'
-#' @return Data frame of validated objects and their validation. Objects with
-#' validations include questions and static text. The validation information
-#' returned in the data frame is:
-#' - `type`. Question type drawn directly from the JSON file.
-#' - `varname`. Variable name. Present only for questions.
-#' - `text`. Question text or static text. For static text objects, this
-#' may serve as  practical identifier, for lack of the equivalent of a
-#' unique variable name.
-#' - `expression_number`. Sequential ID number of the validation defined by
-#' Designer.
-#' - `validation_expression`. Expression provided in the `validation condition`
-#' field in Designer.
-#' - `expression_message`. Text composed in the `error or warning message`
-#' field in Designer
-#' - `severity`. Severity level of the validation. Values of 0 denote an error
-#' while values of 1 denote a warning.
+#' @return Data frame with following columns:
+#'
+#' - `public_key`. Character. GUID of object. Not available for static text.
+#' - `object_type`. Character. Simplified object type. Value: `section`.
+#' - `type`. Character.
+#' - `varname`. Character.
+#' - `text`. Character.
+#' - `expression_number`. Numeric.
+#' - `validation_message`. Character.
+#' - `validation_expression`. Character.
+#' - `severity`. Numeric.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
 #'
 #' @export
-#'
-#' @importFrom dplyr %>% filter select starts_with
-#' @importFrom tidyr pivot_longer
-get_validations <- function(
-  qnr_df
-) {
+get_validations <- function(json_path) {
 
-  n_validations_in_qnr <- qnr_df %>%
-    dplyr::filter(
-      !(
-        .data$validation_expression_1 == "" |
-        is.na(.data$validation_expression_1)
-      )
-    ) %>%
-	nrow()
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-  if (n_validations_in_qnr == 0) {
-    cli::cli_abort(
-      messages = c(
-        "x" = "The questionnaire does not contain any validations."
-      )
-    )
-  }
+  check_json_path(path = json_path)
 
-  validations <- qnr_df %>%
-    dplyr::filter(
-      !(
-        .data$validation_expression_1 == "" |
-        is.na(.data$validation_expression_1)
-      )
-    ) %>%
-    dplyr::select(
-      type, varname, text,
-      dplyr::starts_with("validation_"), starts_with("severity_")
-    ) %>%
-    tidyr::pivot_longer(
-      cols = c(
-        dplyr::starts_with("validation_"),
-        dplyr::starts_with("severity_")
-      ),
-      names_pattern = "(.+?)_([0-9]+)",
-      names_to = c(".value", "expression_number"),
-      values_drop_na = TRUE
-    )
+  # ============================================================================
+  # get data from JSON
+  # ============================================================================
+
+  jq_expr <- '[
+    # collect all objects with a non-emtpy array of validation conditions
+    ..
+    | objects
+    | select((.ValidationConditions // []) | length > 0)
+    # store that stream for later use
+    | . as $q
+    # convert the validation conditions array such as follows:
+    # { "key": index_validation_object , "value: [ vals_in_validation_object ] }
+    # and use this to construct a new set of objects that draw
+    # from both the original stream of objects with validations
+    # and the contents of the validations expressions objects
+    | $q.ValidationConditions
+    | to_entries[]
+    | {
+        "public_key": $q.PublicKey?,
+        "object_type": "validation",
+        "type": $q.["$type"],
+        "varname": $q.VariableName?,
+        "text": $q.Text?,
+        "expression_number": (.key + 1),
+        "validation_message": .value.Message,
+        "validation_expression": .value.Expression,
+        "severity": .value.Severity
+      }
+    ]'
+
+  validations_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  validations_df <- jsonlite::fromJSON(validations_json)
 
 }
