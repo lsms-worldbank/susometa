@@ -2,16 +2,25 @@
 % Please edit documentation in R/extract.R
 \name{get_questions_by_section}
 \alias{get_questions_by_section}
-\title{Get variables by section}
+\title{Get questions with the section to which each belongs.}
 \usage{
-get_questions_by_section(qnr_df)
+get_questions_by_section(json_path)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
 }
 \value{
-Data frame of the mapping of variables to sections
+Data frame with the following columns
+\itemize{
+\item \code{title} and \code{section_id} (PublicKey) for sections
+\item All the columns from \code{get_questions()} and \code{get_variables()}
+}
 }
 \description{
-Get variables by section
+Extract metadata about questions and variables and their parent section
+from the questionnaire JSON as a data frame.
+}
+\seealso{
+get_sections get_questions get_variables
 }

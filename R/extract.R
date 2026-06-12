@@ -485,33 +485,64 @@ get_variables <- function(
 
 }
 
-#' Get variables by section
-#' 
+#' Get questions with the section to which each belongs.
+#'
+#' @description
+#' Extract metadata about questions and variables and their parent section
+#' from the questionnaire JSON as a data frame.
+#'
 #' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns
+#'
+#' - `title` and `section_id` (PublicKey) for sections
+#' - All the columns from `get_questions()` and `get_variables()`
+#'
+#' @seealso get_sections get_questions get_variables
 #' 
-#' @returns Data frame of the mapping of variables to sections
-#' 
-#' @importFrom dplyr %>% full_join select
-#' 
-#' @export 
-get_questions_by_section <- function(qnr_df) {
+#' @importFrom dplyr bind_rows select left_join
+#'
+#' @export
+get_questions_by_section <- function(json_path) {
 
-    sections <- get_sections(qnr_df = qnr_df)
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-    questions <- get_questions(qnr_df = qnr_df)
+  # path
+  check_json_path(path = json_path)
 
-    qs_by_section <- sections %>%
-        # select common attributes only
-        dplyr::select(.data$title, .data$l_0) %>%
-        # join the variables to the section to which they belong
-        dplyr::left_join(questions, by = "l_0") %>%
-        # rename vaiables for clarity
-        dplyr::rename(
-            section = .data$title,
-            variable = .data$varname
-        )
+  # ============================================================================
+  # retrieve
+  # ============================================================================
 
-    return(qs_by_section)
+  sections_df <- get_sections(json_path = json_path)
+
+  questions_df <- get_questions(
+    json_path = json_path,
+    add_section_id = TRUE
+  )
+
+  variables_df <- get_variables(
+    json_path = json_path,
+    add_section_id = TRUE
+  )
+
+  # ============================================================================
+  # construct data frame
+  # ============================================================================
+
+  questions_and_variables_df <- dplyr::bind_rows(
+    questions_df, variables_df
+  )
+
+  questions_by_sections <- sections_df |>
+    # select common attributes only
+    dplyr::select(title, section_id = public_key) |>
+    # join questions to the section to which each belongs
+    dplyr::left_join(questions_and_variables_df, by = "section_id")
+
+  return(questions_by_sections)
 
 }
 
