@@ -2,17 +2,55 @@
 % Please edit documentation in R/extract.R
 \name{get_questions}
 \alias{get_questions}
-\title{Get questons from questionnaire metadata}
+\title{Get metadata for questions}
 \usage{
-get_questions(qnr_df)
+get_questions(json_path, add_section_id = FALSE)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
+
+\item{add_section_id}{Boolean. Whether to include the public key of the
+section that contains the question.}
 }
 \value{
-Data frame of questions (\code{varname}), their JSON indices (\verb{l_*}),
-and other question attributes
+Data frame with the following columns:
+\itemize{
+\item \code{section_id}. Character. GUID. Present only if \code{add_section_id = TRUE}.
+\item \code{object_type}. Character. Simplified object type. Value: \code{question}.
+\item \code{type}. Character. SuSo-provided object type. Value: question type.
+\item \code{question_type}
+\item \code{condition_expression}
+\item \code{hide_if_disabled}
+\item \code{featured}
+\item \code{instructions}
+\item \code{public_key}
+\item \code{question_scope}
+\item \code{question_text}
+\item \code{stata_export_caption}
+\item \code{variable_label}
+\item \code{is_timestamp}
+\item \code{varname}
+\item \code{hide_instructions}
+\item \code{use_formatting_properites}
+\item \code{geometry_type}
+\item \code{geometry_input_mode}
+\item \code{is_critical}
+\item \code{mask}
+\item \verb{answer_text_*}
+\item \verb{answer_value_*}
+\item \verb{validation_expression_*}
+\item \verb{validation_message_*}
+\item \verb{validation_severity_*}
+\item \code{show_as_list}
+\item \code{categories_id}
+\item \code{is_filtered_combo_box}
+\item \code{show_as_list_threshold}
+\item \code{cascade_from_question_id}
+\item \code{max_answer_count}
+\item \code{linked_to_question_id}
+}
 }
 \description{
-Get questons from questionnaire metadata
+Get metadata for questions
 }

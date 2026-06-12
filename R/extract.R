@@ -205,141 +205,165 @@ get_rosters <- function(json_path) {
 
 }
 
-#' General attributes of questions
-#' 
-#' @description Attributes that are common to all question types
-#' 
-#' @noRd 
-var_general <- c(
-    "type",
-    "public_key",
-    "condition_expression",
-    "hide_if_disabled",
-    "featured",
-    "hide_instructions",
-    "use_formatting_properties",
-    "filter_expression",
-    "question_scope",
-    "question_text",
-    "instructions",
-    "question_type",
-    "stata_export_caption",
-    "variable_label",
-    "categories_id"
-)
-
-#' Single-select questions attributes
-#' 
-#' @description Attributes unique to single-select questions
-#' 
-#' @noRd 
-var_single_select <- c(
-    "show_as_list"
-)
-
-#' Multi-select questions attributes
-#' 
-#' @description Attributes unique to multi-select questions
-#' 
-#' @noRd 
-var_multi_select <- c(
-    "answer_order",
-    "are_answers_ordered",
-    "yes_no_view"
-)
-
-#' Attributes of either single- or multiple-select questions
-#' 
-#' @description Attributes that may be found for either single- or multiple-
-#' select questions
-#' 
-#' @noRd 
-var_single_or_multiple_select <- c(
-    "is_filtered_combo_box",
-    "linked_to_roster_id",
-    "linked_to_question_id",
-    "linked_filter_expression"
-)
-
-#' Date question attributes
-#' 
-#' @description Attributes unique to date questions
-#' 
-#' @noRd 
-var_date <- c(
-    "is_timestamp"
-)
-
-#' Numeric question attributes
-#' 
-#' @description Attributes unique to numeric questions
-#' 
-#' @noRd 
-var_numeric <- c(
-    "is_integer",
-    "num_decimal_places",
-    "use_formatting_numeric"
-)
-
-#' Text question attributes
-#' 
-#' @description Attributes unique to text questions
-#' 
-#' @noRd 
-var_text <- c(
-    "mask"
-)
-
-#' Computed variable attributes
-#' 
-#' @description Attributes of SuSo's computed variables
-#' 
-#' @noRd
-variable_attribs <- c(
-    "type",
-    "type_variable",
-    "label_variable",
-    "public_key",
-    "name_variable",
-    "expression_variable",
-    "do_not_export"
-)
-
-#' Get questons from questionnaire metadata
-#' 
+#' Get metadata for questions
+#'
 #' @inheritParams get_sections
-#' 
-#' @returns Data frame of questions (`varname`), their JSON indices (`l_*`),
-#' and other question attributes
-#' 
-#' @importFrom dplyr %>% filter select
-#' @importFrom tidyselect any_of matches
-#' 
-#' @export 
-get_questions <- function(qnr_df) {
+#' @param add_section_id Boolean. Whether to include the public key of the
+#' section that contains the question.
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `section_id`. Character. GUID. Present only if `add_section_id = TRUE`.
+#' - `object_type`. Character. Simplified object type. Value: `question`.
+#' - `type`. Character. SuSo-provided object type. Value: question type.
+#' - `question_type`
+#' - `condition_expression`     
+#' - `hide_if_disabled`
+#' - `featured`
+#' - `instructions`
+#' - `public_key`               
+#' - `question_scope`
+#' - `question_text`
+#' - `stata_export_caption`
+#' - `variable_label`
+#' - `is_timestamp`
+#' - `varname`
+#' - `hide_instructions`
+#' - `use_formatting_properites`
+#' - `geometry_type`
+#' - `geometry_input_mode`
+#' - `is_critical`
+#' - `mask`
+#' - `answer_text_*`
+#' - `answer_value_*`
+#' - `validation_expression_*`
+#' - `validation_message_*`
+#' - `validation_severity_*`
+#' - `show_as_list`
+#' - `categories_id`
+#' - `is_filtered_combo_box`
+#' - `show_as_list_threshold`
+#' - `cascade_from_question_id`
+#' - `max_answer_count`
+#' - `linked_to_question_id`
+#'
+#' @importFrom cli cli_abort
+#' @importFrom glue glue
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_questions <- function(
+  json_path,
+  add_section_id = FALSE
+) {
 
-    variables <- qnr_df %>%
-        # filter to objects that are variables
-        # namely, entities that have a `question_type`
-        dplyr::filter(!is.na(.data$question_type)) %>%
-        # select the attributes
-        dplyr::select(
-            # index IDs
-            dplyr::starts_with("l_"),
-            # name
-            varname,
-            # other question properties
-            tidyselect::any_of(var_general),
-            tidyselect::any_of(var_single_select),
-            tidyselect::any_of(var_multi_select),
-            tidyselect::any_of(var_single_or_multiple_select),
-            tidyselect::any_of(var_date),
-            tidyselect::any_of(var_numeric),
-            tidyselect::any_of(var_text),
-            tidyselect::matches("answer_(text|value)_")
-        )
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-    return(variables)
+  # path
+  check_json_path(path = json_path)
+
+  # section ID toggle
+  if (!is.logical(add_section_id)) {
+    cli::cli_abort(
+      message = c(
+        "x" = "{.arg add_section_id} must be logical (TRUE / FALSE)."
+      )
+    )
+  }
+
+  # ============================================================================
+  # construct query
+  # ============================================================================
+
+  # conditionally add content to the query
+  if (add_section_id == TRUE) {
+
+    jq_get_sections <- '
+      # collect sections, the immediate children of the document
+      | .Children[]
+      | select(."$type" == "Group")
+      | . as $section
+    '
+
+    jq_add_section_id <- '
+      # construct an object for each question/variable that contains
+      # the title of its ancestor section and
+      # the attributres of the question
+      | {
+          "section_id": $section.PublicKey,
+        }
+        + .
+    '
+  # otherwise, set these conditional parts to be empty
+  } else {
+
+    jq_get_sections <- ''
+
+    jq_add_section_id <- ''
+
+  }
+
+  jq_questions_expr <- glue::glue(
+    '[
+      .
+      <jq_get_sections>
+      # collect questions
+      | ..
+      | objects
+      | select(has("QuestionType"))
+      <jq_add_section_id>
+      # hoist properties out of properties object
+      | . + {
+        "hide_instructions": .Properties.HideInstructions,
+        "use_formatting_properites": .Properties.UseFormatting,
+        # make "nullable" since these properties may not be present in
+        # older versions of the JSON file
+        "geometry_type": .Properties.GeometryType?,
+        "geometry_input_mode": .Properties.GeometryInputMode?,
+        "is_critical": .Properties.IsCritical?,
+      }
+      # remove the original Properties object
+      | del(.Properties)
+      # remove always-empty Children
+      | del(.Children)
+      # transform arrays of answer objects to
+      # for answers
+      # a numbered set of key-value pairs
+      | flatten_answers
+      # for validations
+      | flatten_validations
+      # rename keys
+      # ... for known keys
+      | rename_question_attribs
+      # ... for unknown keys, from Pascal to snake case
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type" : "question" }
+    ]',
+    .open = "<",
+    .close = ">"
+  )
+
+  jq_expr <-
+    paste0(
+      # function definitions
+      jq_def_flatten_answers,
+      jq_def_flatten_validations,
+      jq_rename_question_attribs,
+      jq_rename_from_pascal_to_snake_case,
+      # query
+      jq_questions_expr
+    )
+
+  questions_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  questions_df <- jsonlite::fromJSON(questions_json)
+
+  return(questions_df)
 
 }
 
@@ -406,37 +430,6 @@ get_questions_by_section <- function(qnr_df) {
     return(qs_by_section)
 
 }
-
-#' Variable type value labels
-#' 
-#' @description Labels that describe the possible values of variable labels
-#' 
-#' @noRd 
-variable_type_lbls <- c(
-    `Long Integer` = 1,
-    `Double` = 2,
-    `Boolean` = 3,
-    `Date/Time` = 4,
-    `String` = 5
-)
-
-#' Question type labels
-#' 
-#' @description Labels that describe the possible values of question types
-#' 
-#' @noRd 
-question_type_lbls <- c(
-    `Categorical: Single-select` = 0,
-    # 1?
-    # 2?
-    `Categorical: Multi-select` = 3, # MultyOptionsQuestion
-    `Numeric` = 4, # NumericQuestion
-    `Date` = 5, # DateTimeQuestion
-    `GPS` = 6, # GpsCoordinateQuestion
-    `Text` = 7, # TextQuestion
-    # 8?
-    `List` = 9 # TextListQuestion
-)
 
 #' Get answer options
 #'

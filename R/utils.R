@@ -51,6 +51,110 @@ check_json_path <- function(
 
 }
 
+#' Variable type value labels
+#' 
+#' @description Labels that describe the possible values of variable labels
+#' 
+#' @noRd 
+variable_type_lbls <- c(
+  `Long Integer` = 1,
+  `Double` = 2,
+  `Boolean` = 3,
+  `Date/Time` = 4,
+  `String` = 5
+)
+
+#' Question type labels
+#' 
+#' @description Labels that describe the possible values of question types
+#' 
+#' @noRd 
+question_type_lbls <- c(
+  `Categorical: Single-select` = 0,
+  # 1?
+  # 2?
+  `Categorical: Multi-select` = 3, # MultyOptionsQuestion
+  `Numeric` = 4, # NumericQuestion
+  `Date` = 5, # DateTimeQuestion
+  `GPS` = 6, # GpsCoordinateQuestion
+  `Text` = 7, # TextQuestion
+  # 8?
+  `List` = 9 # TextListQuestion
+)
+
+
+#' `jq` function that flattens answers.
+#'
+#' @description
+#' Transforms the array of answer objects into a set of key-value pairs
+#' that are numbered with a 1-based index.
+#'
+#' @details
+#' In `json`, answers are of this form:
+#'
+#' ```json
+#'   "Answers": [
+#'     {
+#'       "$type": "Answer",
+#'       "AnswerText": "Urban",
+#'       "AnswerValue": "1",
+#'       "AnswerCode": 1.0
+#'     },
+#'     {
+#'       "$type": "Answer",
+#'       "AnswerText": "Rural",
+#'       "AnswerValue": "2",
+#'       "AnswerCode": 2.0
+#'     }
+#'   ],
+#' ```
+#'
+#' This function transforms them to this form:
+#' 
+#' ```json
+#'  answer_text__1": "Urban",
+#'  answer_value__1": 1,
+#'  answer_text__2": "Rural",
+#'  answer_value__2": 2,
+#' ```
+#' 
+#' @noRd
+jq_def_flatten_answers <- '
+def flatten_answers:
+  . + (
+    [range(.Answers | length) as $i |
+      {
+        ("answer_text_\\($i + 1)"): .Answers[$i].AnswerText,
+        ("answer_value_\\($i + 1)"): (.Answers[$i].AnswerValue | tonumber)
+      }
+    ] | add // {}
+  )
+  | del(.Answers)
+;
+'
+
+#' `jq` function to flatten validations
+#'
+#' @description
+#' Transforms the array of validation objects into a set of key-value pairs
+#' that are numbered with a 1-based index.
+#'
+#' @noRd
+jq_def_flatten_validations <- '
+def flatten_validations:
+  . + (
+    [range(.ValidationConditions | length) as $i |
+      {
+        ("validation_expression_\\($i + 1)"): .ValidationConditions[$i].Expression,
+        ("validation_message_\\($i + 1)"): (.ValidationConditions[$i].Message),
+        ("validation_severity_\\($i + 1)"): (.ValidationConditions[$i].Severity | tonumber)
+      }
+    ] | add // {}
+  )
+  | del(.ValidationConditions)
+;
+'
+
 #' jq expression to flatten fixed roster titles
 #'
 #' @noRd
@@ -121,3 +225,107 @@ as $renames |
 ;
 '
 
+#' jq expression for renaming known keys of questions
+#'
+#' @noRd
+jq_rename_question_attribs <- '
+def rename_question_attribs:
+{
+
+  # ======================================================================================
+  # general object attributes
+  # ======================================================================================
+
+  "$type": "type",
+  "VariableName": "varname",
+  "PublicKey": "public_key",
+  "ConditionExpression": "condition_expression",
+  "HideIfDisabled": "hide_if_disabled",
+
+  # ======================================================================================
+  # general question attributes
+  # ======================================================================================
+
+  # those at the root of the question object
+  "Featured": "featured",
+  "QuestionScope": "question_scope",
+  "QuestionText": "question_text",
+  "Instructions": "instructions",
+  "QuestionType": "question_type",
+  "StataExportCaption": "stata_export_caption",
+  "VariableLabel": "variable_label",
+  # those within the Properties object
+  "HideInstructions": "hide_instructions",
+    # "UseFormatting" from properties is handled in the pipeline
+  "GeometryType": "geometry_type",
+  "GeometryInputMode": "geometry_input_mode",
+  "IsCritical": "is_critical",
+
+  # ======================================================================================
+  # attributes by question type
+  # ======================================================================================
+
+  # ----------------------------------------------------------------------------
+  # categorical, either single-select or multi-select
+  # ----------------------------------------------------------------------------
+
+  "IsFilteredCombobox": "is_filtered_combo_box",
+  "LinkedToRosterId": "linked_to_roster_id",
+  "LinkedToQuestionId": "linked_to_question_id",
+  "LinkedFilterExpression": "linked_filter_expression",
+  "CategoriesId": "categories_id",
+
+  # ----------------------------------------------------------------------------
+  # single-select
+  # ----------------------------------------------------------------------------
+
+  "ShowAsList": "show_as_list",
+
+  # ----------------------------------------------------------------------------
+  # multi-select
+  # ----------------------------------------------------------------------------
+
+  "AnswerOrder": "answer_order",
+  "AreAnswersOrdered": "are_answers_ordered",
+  "YesNoView": "yes_no_view",
+
+  # ----------------------------------------------------------------------------
+  # date
+  # ----------------------------------------------------------------------------
+
+  "IsTimestamp": "is_timestamp",
+
+  # ----------------------------------------------------------------------------
+  # numeric
+  # ----------------------------------------------------------------------------
+
+  "IsInteger": "is_integer",
+  "CountOfDecimalPlaces": "num_decimal_places",
+  "UseFormatting": "use_formatting_numeric",
+
+  # ----------------------------------------------------------------------------
+  # text
+  # ----------------------------------------------------------------------------
+
+  "Mask": "mask",
+
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
