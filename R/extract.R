@@ -367,37 +367,121 @@ get_questions <- function(
 
 }
 
-#' Get SuSo's computed variables from questionnaire metadata
-#' 
-#' @inheritParams get_sections
-#' 
-#' @returns Data frame of questions (`varname`), their JSON indices (`l_*`),
-#' and other question attributes
-#' 
-#' @importFrom dplyr %>% filter select
-#' @importFrom tidyselect any_of
-#' @importFrom labelled set_value_labels
-#' 
-#' @export 
-get_variables <- function(qnr_df) {
+#' Get metadata for computed variables.
+#'
+#' @description
+#' Extract metadata about computed variables from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_questions
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `section_id`. Character. GUID. Present only if `add_section_id = TRUE`.
+#' - `object_type`. Character. Simplified object type. Value: `variable`.
+#' - `type`. Character. SuSo-provided object type. Value: `Variable`.
+#' - `label_variable`
+#' - `public_key`
+#' - `type_variable`
+#' - `name_variable`
+#' - `expression_variable`
+#' - `do_not_export`
+#' - `varname`
+#'
+#' @importFrom cli cli_abort
+#' @import glue glue
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_variables <- function(
+  json_path,
+  add_section_id = FALSE
+) {
 
-    variables <- qnr_df %>%
-        # filter to objects that are of type `Variable`
-        dplyr::filter(.data$type == "Variable") %>%
-        # select attributes relevant for variables
-        dplyr::select(
-            # index IDs
-            dplyr::starts_with("l_"),
-            # name
-            .data$varname,
-            # other question properties
-            tidyselect::any_of(variable_attribs),
-        ) %>%
-        labelled::set_value_labels(
-            type_variable = variable_type_lbls
-        )
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-    return(variables)
+  # path
+  check_json_path(path = json_path)
+
+  # section ID toggle
+  if (!is.logical(add_section_id)) {
+    cli::cli_abort(
+      message = c(
+        "x" = "{.arg add_section_id} must be logical (TRUE / FALSE)."
+      )
+    )
+  }
+
+  # ============================================================================
+  # construct query
+  # ============================================================================
+
+  # conditionally add content to the query
+  if (add_section_id == TRUE) {
+
+    jq_get_sections <- '
+      # collect sections, the immediate children of the document
+      | .Children[]
+      | select(."$type" == "Group")
+      | . as $section
+    '
+
+    jq_add_section_id <- '
+      # construct an object for each question/variable that contains
+      # the title of its ancestor section and
+      # the attributres of the question
+      | {
+          "section_id": $section.PublicKey,
+        }
+        + .
+    '
+  # otherwise, set these conditional parts to be empty
+  } else {
+
+    jq_get_sections <- ''
+
+    jq_add_section_id <- ''
+
+  }
+
+  jq_variables_expr <- glue::glue('
+    [
+      .
+      <jq_get_sections>
+      # collect all variables whereve they may be found in the tree
+      | ..
+      | objects
+      | select(."$type" == "Variable")
+      <jq_add_section_id>
+      # remove the always empty `Children` array
+      | del(.Children)
+      # rename attributes
+      # ... known attributes
+      | rename_variable_attribs
+      # ... unknown attributes from Pascal to snake case
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type" : "variable" }
+    ]',
+    .open = "<",
+    .close = ">"
+  )
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_rename_variable_attribs,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    jq_variables_expr
+  )
+
+  variables_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  variables_df <- jsonlite::fromJSON(variables_json)
 
 }
 

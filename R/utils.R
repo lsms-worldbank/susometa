@@ -320,6 +320,31 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of computed variables
+#'
+#' @noRd
+jq_rename_variable_attribs <- '
+def rename_variable_attribs:
+{
+  "$type": "type",
+  "Label": "label_variable",
+  "PublicKey": "public_key",
+  "Type": "type_variable",
+  "Name": "name_variable",
+  "Expression": "expression_variable",
+  "DoNotExport": "do_not_export",
+  "VariableName": "varname"
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key

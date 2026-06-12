@@ -2,17 +2,33 @@
 % Please edit documentation in R/extract.R
 \name{get_variables}
 \alias{get_variables}
-\title{Get SuSo's computed variables from questionnaire metadata}
+\title{Get metadata for computed variables.}
 \usage{
-get_variables(qnr_df)
+get_variables(json_path, add_section_id = FALSE)
 }
 \arguments{
-\item{qnr_df}{Data frame produced by \code{susopara::parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
+
+\item{add_section_id}{Boolean. Whether to include the public key of the
+section that contains the question.}
 }
 \value{
-Data frame of questions (\code{varname}), their JSON indices (\verb{l_*}),
-and other question attributes
+Data frame with the following columns:
+\itemize{
+\item \code{section_id}. Character. GUID. Present only if \code{add_section_id = TRUE}.
+\item \code{object_type}. Character. Simplified object type. Value: \code{variable}.
+\item \code{type}. Character. SuSo-provided object type. Value: \code{Variable}.
+\item \code{label_variable}
+\item \code{public_key}
+\item \code{type_variable}
+\item \code{name_variable}
+\item \code{expression_variable}
+\item \code{do_not_export}
+\item \code{varname}
+}
 }
 \description{
-Get SuSo's computed variables from questionnaire metadata
+Extract metadata about computed variables from the questionnaire JSON
+as a data frame.
 }
