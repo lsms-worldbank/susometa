@@ -399,3 +399,11 @@ as $renames |
 ;
 
 '
+
+jq_def_rename_type <- '
+def rename_type:
+  # add `type`
+  . + {"type": ."$type"}
+  # remove old `$type`
+  | del(."$type");
+'
