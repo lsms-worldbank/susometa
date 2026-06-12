@@ -345,6 +345,29 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of static text
+#'
+#' @noRd
+jq_def_rename_static_text <- '
+def rename_static_text:
+{
+  "$type": "type",
+  "PublicKey": "public_key",
+  "Text": "text",
+  "AttachmentName": "attachment_name",
+  "ConditionExpression": "condition_expression",
+  "HideIfDisabled": "hide_if_disabled"
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key

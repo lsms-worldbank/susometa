@@ -996,3 +996,74 @@ get_validations <- function(json_path) {
   validations_df <- jsonlite::fromJSON(validations_json)
 
 }
+
+#' Get metadata on static text.
+#'
+#' @description
+#' Extract metadata about sections from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Character. Simplified object type. Value: `section`.
+#' - `type`. Character. SuSo-provided type. Value: `Group.`
+#' - `public_key`. Character. GUID for object.
+#' - `text`. Character.
+#' - `attachment_name`. Character.
+#' - `condition_expression`. Character.
+#' - `hide_if_disabled`. Logical.
+#' - `validation_expression_*`. Character. Present if validations used.
+#' - `validation_message_*`. Character. Present if validations used.
+#' - `validation_severity_*`. Character. Present if validations used.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_static_texts <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # compose expression
+  # ============================================================================
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_def_flatten_validations,
+    jq_def_rename_static_text,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    '[
+      # collect all static text objects
+      ..
+      | objects
+      | select(."$type" == "StaticText")
+      # remove irrelvant attributes
+      | del(.Children, .VariableName)
+      # flatten validations
+      | flatten_validations
+      # rename attributes
+      | rename_static_text
+      # add object type attribute
+      | . + { "object_type" : "static text" }
+    ]'
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  static_texts_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  static_texts_df <- jsonlite::fromJSON(static_texts_json)
+
+}
