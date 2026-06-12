@@ -2,88 +2,152 @@
 # inputs
 # ==============================================================================
 
-testthat::test_that("errors if `varname` is not a bare name", {
+# ------------------------------------------------------------------------------
+# json path
+# ------------------------------------------------------------------------------
 
-  # load input data
-  qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
-  reusable_categories_df <- readRDS(
-    testthat::test_path("fixtures", "reusable_categories_df.rds")
+testthat::test_that("errors if `json_path` does not exist", {
+
+  testthat::expect_error(
+    get_answer_options(json_path = "path/dne/document.json")
   )
 
-  # errors for inputs that are not bare names
-  # testthat::expect_error(
-  #   get_answer_options(
-  #     qnr_df = qnr_df,
-  #     categories_df = reusable_categories_df,
-  #     varname = "reason_refusal"
-  #   ),
-  #   regexp = "Invalid value provided"
-  # )
+})
 
-  testthat::expect_no_error(
+testthat::test_that("errors if `json_path` points to non-json file", {
+
+  testthat::expect_error(
     get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
-      varname = reason_refusal
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories",
+        "0e00edf674ed45f4a93e6d226f2c069b.xlsx"
+      )
     )
   )
 
 })
 
-testthat::test_that("errors if questionnaire does not contain variable", {
+# ------------------------------------------------------------------------------
+# categories directory
+# ------------------------------------------------------------------------------
 
-  # load input data
-  qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
-  reusable_categories_df <- readRDS(
-    testthat::test_path("fixtures", "reusable_categories_df.rds")
-  )
+# TODO
+
+# ------------------------------------------------------------------------------
+# varname
+# ------------------------------------------------------------------------------
+
+testthat::test_that("errors if questionnaire does not contain variable", {
 
   testthat::expect_error(
     get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
       varname = boo
     ),
     regexp = "No variable named"
   )
 
-})
-
-testthat::test_that("errors if categories are not a data frame", {
-
-  # load input data
-  qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
-  reusable_categories_df <- c("wrong", "input")
-
-  testthat::expect_error(
+  testthat::expect_no_error(
     get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
-      varname = reason_refusal
-    ),
-    regexp = "is not a data frame"
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s12q07
+    )
   )
 
 })
 
-testthat::test_that("errors if categories df does not have expected cols", {
+# TODO
+# testthat::test_that("errors if `varname` is not a bare name", {
+# })
 
-  # load input data
-  qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
-  reusable_categories_df <- testthat::test_path(
-    "fixtures", "reusable_categories_df.rds"
-  ) |>
-  readRDS() |>
-  # remove column to trigger an error
-	dplyr::select(categories_id)
+# ------------------------------------------------------------------------------
+# to_exclude
+# ------------------------------------------------------------------------------
+
+testthat::test_that("errors if `to_exclude` is not `NULL` or a numeric vector", {
 
   testthat::expect_error(
     get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
-      varname = reason_refusal
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s12q07,
+      to_exclude = "foo"
     ),
-    regexp = "not have expected columns"
+    regexp = "must be either `NULL` or a numeric vector."
+  )
+
+  testthat::expect_no_error(
+    get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s12q07,
+      to_exclude = 1
+    )
+  )
+
+  testthat::expect_no_error(
+    get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s12q07,
+      to_exclude = c(1, 96)
+    )
+  )
+
+})
+
+testthat::test_that("errors if no answers remain after excluding", {
+
+  # answer options
+  testthat::expect_error(
+    get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s12q07,
+      to_exclude = c(1:9, 96)
+    ),
+    regexp = "No answers remain"
+  )
+
+  # reusable categories
+  testthat::expect_error(
+    susometa::get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s22q1c,
+      to_exclude = c(1, 2)
+    ),
+    regexp = "No answers remain"
   )
 
 })
@@ -96,16 +160,14 @@ testthat::test_that(
   desc = "returns named vector of answer options when answer present",
   code = {
 
-    # load input data
-    qnr_df <- readRDS(testthat::test_path("fixtures", "qnr_df.rds"))
-    reusable_categories_df <- readRDS(
-      testthat::test_path("fixtures", "reusable_categories_df.rds")
-    )
-
     # get answers
     answers_options <- susometa::get_answer_options(
-      qnr_df = qnr_df,
-      categories_df = reusable_categories_df,
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
       varname = reason_refusal
     )
 
@@ -122,6 +184,73 @@ testthat::test_that(
         "No time / Too busy",
         "No interest",
         "Other, specify"
+      )
+    )
+
+  }
+)
+
+testthat::test_that(
+  desc = "excluded answers are actually excluded",
+  code = {
+
+    # get answers
+    answers_options <- susometa::get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = reason_refusal,
+      to_exclude = -96
+    )
+
+    # check expectations
+    # return value is a numeric vector
+    testthat::expect_vector(
+      object = answers_options,
+      ptype = numeric()
+    )
+    # return value has expected names
+    testthat::expect_named(
+      object = answers_options,
+      expected = c(
+        "No time / Too busy",
+        "No interest"
+      )
+    )
+
+  }
+)
+
+testthat::test_that(
+  desc = "returns answers when the question uses reusable categories",
+  code = {
+
+    # get answers
+    answers_options <- susometa::get_answer_options(
+      json_path = testthat::test_path(
+        "fixtures", "qnr_metadata", "document.json"
+      ),
+      categories_dir = testthat::test_path(
+        "fixtures", "qnr_metadata", "Categories"
+      ),
+      varname = s22q1c
+    )
+
+    # check expectations
+    # return value is a numeric vector
+    testthat::expect_vector(
+      object = answers_options,
+      ptype = numeric()
+    )
+    # return value has expected names
+    testthat::expect_named(
+      object = answers_options,
+      expected = c(
+        "YES",
+        "NO"
       )
     )
 

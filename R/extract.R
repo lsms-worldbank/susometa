@@ -552,240 +552,325 @@ get_questions_by_section <- function(json_path) {
 #' Obtain the answer options for a target variable as a set of name-value pairs
 #' in labelled numeric vector.
 #'
-#' @param qnr_df Data frame returned from `parse_questionnaire()`
-#' @param categories_df Data frame returned from `parse_categories()`
+#' @inheritParams get_sections
 #' @param varname Variable name. Bare name of variable whose answer options to
 #' extract.
+#' @param categories_dir Character. Path to the `Categories` directory
+#' of metadata and/or where the `.xlsx` files containing reusable categories
+#' can be found.
 #' @param to_exclude Numeric vector. Code of answer options to exclude.
 #'
 #' @return Named numeric vector.
 #' Values are answer codes. Names are answer labels.
 #'
-#' @importFrom dplyr %>% filter select starts_with pull if_else
-#' @importFrom rlang .data as_label expr
-#' @importFrom tidyr pivot_longer everything
+#' @importFrom rlang as_label expr
+#' @importFrom jqr jq
+#' @importFrom glue glue glue_collapse
+#' @importFrom jsonlite fromJSON
 #' @importFrom cli cli_abort
+#' @importFrom dplyr filter
 #' @importFrom stats setNames
 #'
 #' @export
 get_answer_options <- function(
-    qnr_df,
-    categories_df = NULL,
-    varname,
-    to_exclude = NULL
+  json_path,
+  categories_dir,
+  varname,
+  to_exclude = NULL
 ) {
 
-    # confirm that variable name is a bare name
-    # varname_as_expr <- rlang::enexpr(varname)
-    # is_name <- is_bare_name(varname_as_expr)
+  # capture variable name as text
+  varname_txt <- rlang::as_label(rlang::expr({{varname}}))
 
-    # if (is_name == FALSE) {
-    #     cli::cli_abort(
-    #         message = c(
-    #             "x" = "Invalid value provided for {.arg varname}.",
-    #             "i" = paste(
-    #                 "The function expects a bare variable name",
-    #                 "(e.g. `varname` instead of {.str varname})."
-    #             )
-    #         )
-    #     )
-    # }
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-    # capture variable name as text
-    varname_txt <- rlang::as_label(rlang::expr({{varname}}))
+  # json_path
+  check_json_path(path = json_path)
 
-    # check that a variable named `varname` exists
-    varname_exists <- any(qnr_df$varname == varname_txt)
-    if (varname_exists == FALSE) {
-        cli::cli_abort(
-            message = c(
-                "x" = "No variable named {.var {varname_txt}} found.",
-                "i" = "Please check the name of the target variable.",
-                "i" = paste(
-                    "Note: variable names should be specified",
-                    "as they appear in Designer.",
-                    sep = " "
-                )
-            )
-        )
-    }
+  # varname
+  # TODO: check that it is a bare name
 
-    # check that the categories data frame exists
-    categories_df_is_df <- is.data.frame(categories_df)
-    if (categories_df_is_df == FALSE) {
+  # to_exclude
+  if (
+    !(
+      # either default `NULL`
+      is.null(to_exclude) |
+      # or a numeric vector
+      (
+        is.numeric(to_exclude) &
+        is.vector(to_exclude)
+      )
 
-        cli::cli_abort(
-            message = c(
-                "x" = "{.arg categories_df} is not a data frame.",
-                "i" = "The function expects a data frame of categories.",
-                sep = " "
-            )
-        )
-    }
-
-    # check that categories data frame is of expected form
-    categories_col_names <- c("categories_id", "value", "text")
-    categories_has_right_names <- all(
-        categories_col_names %in% names(categories_df)
     )
-    if (categories_has_right_names == FALSE) {
+  ) {
+    cli::cli_abort(
+      message = c(
+        "x" = "{.arg to_exclude} must be either `NULL` or a numeric vector."
+      )
+    )
+  }
 
-        cli::cli_abort(
-            message = c(
-                "x" = "Categories data frame does not have expected columns.",
-                "i" = paste(
-                    "The function expects the data frame produced by",
-                    "{.fn parse_categories},",
-                    "with column names",
-                    "{.var categories_id}, {.var value}, {.var text}.",
-                    sep = " "
-                )
-            )
+
+  # ============================================================================
+  # check target's content in JSON
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # variable
+  # ----------------------------------------------------------------------------
+
+  varname_exists <- jqr::jq(
+    x = base::file(json_path),
+    glue::glue(
+      'any(
+        .. | objects | select(has("QuestionType"));
+        (.VariableName == "<varname_txt>")
+      )',
+      .open = '<',
+      .close = '>'
+    )
+  ) |>
+	jsonlite::fromJSON()
+
+  if (varname_exists == FALSE) {
+    cli::cli_abort(
+      message = c(
+        "x" = "No variable named {.var {varname_txt}} found.",
+        "i" = "Please check the name of the target variable.",
+        "i" = paste(
+          "Note: variable names should be specified",
+          "as they appear in Designer.",
+          sep = " "
         )
-    }
+      )
+    )
+  }
 
+  # ----------------------------------------------------------------------------
+  # answer options
+  # ----------------------------------------------------------------------------
 
-    # filter down to metadata for the target variable
-    var_metadata <- qnr_df %>%
-        # find attributes for variable of interest
-        dplyr::filter(varname == varname_txt)
-
-    # determine whether `varname` has answer options and/or categories
-    has_answer_options <- var_metadata |>
-        dplyr::mutate(
-            has_answers = dplyr::if_any(
-                .cols = dplyr::starts_with("answer_value_"),
-                .fns = ~ is.na(.x)
-            )
-        ) |>
-        dplyr::pull(.data$has_answers)
-
-    categories_id_value <- dplyr::pull(var_metadata, .data$categories_id) |>
-        # remove hyphens so that GUID has same format across sources
-        gsub(
-            pattern = "-",
-            replacement = ""
+  has_any_answer_options <- jqr::jq(
+    x = base::file(json_path),
+    glue::glue(
+      'any(
+        .. | objects;
+        .VariableName == "<varname_txt>"
+        and (
+          ((.Answers // []) | length > 0)
+          or
+          (.CategoriesId != null)
         )
+      )',
+      .open = '<',
+      .close = '>'
+    )
+  ) |>
+	jsonlite::fromJSON()
 
-    has_reusable_categories <- dplyr::if_else(
-        condition = !is.na(categories_id_value) & (categories_id_value != ""),
-        true = TRUE,
-        false = FALSE,
-        missing = FALSE
+  if (has_any_answer_options == FALSE) {
+
+    cli::cli_abort(
+      message = c(
+        "x" = "The question ({varname_txt}) does not have any answer options."
+      )
     )
 
-    # case 1: has answer options only
-    if (has_answer_options == TRUE & has_reusable_categories == FALSE) {
- 
-        # select answer and value columns from questionnaire data frame
-        answer_options <- var_metadata %>%
-            # select columns that capture answer text and values
-            dplyr::select(
-                dplyr::starts_with("answer_text"),
-                dplyr::starts_with("answer_value")
-            ) %>%
-            # pivot so that option text and values occupy their own columns
-            tidyr::pivot_longer(
-                cols = tidyr::everything(),
-                # create 1 column per each value found in pattern, 
-                # named what is found in expression
-                names_to = c(".value", "index"),
-                # variable names: `answer_text_{n}` and `answer_value_{n}`
-                names_pattern = "answer_([a-z]+)_([0-9]+)", 
-                # drop rows that contain only NAs
-                # that is, empty answer_text and answer_value columns
-                values_drop_na = TRUE
-            ) %>%
-            # exclude label values
-            {if (length(to_exclude) >= 1) filter(., !.data$value %in% to_exclude) else .}
+  }
 
-        if (nrow(answer_options) == 0) {
+  if (!is.null(to_exclude)) {
 
-            cli::cli_abort(
-                message = c(
-                    "x" = "No answer options.",
-                    "i" = paste(
-                        "After excluding the answers in {.arg to_exclude},",
-                        "no answer options remain.",
-                        sep = " "
-                    )
-                )
-            )
+    to_exclude_txt <- glue::glue_collapse(x = to_exclude, sep = ", ", last = ", ")
 
-        } else {
-
-            # construct a named numeric vector
-            # - values are answer option codes
-            # - names are answer labels
-            val_lbls <- stats::setNames(
-                object = as.numeric(answer_options$value),
-                nm = answer_options$text
-            )
-
-            return(val_lbls)
-
-        }
-       
-    # case 2: has reusable categories
-    } else if (
-        # case 2a: has only reusable categories
-        (has_answer_options == FALSE & has_reusable_categories == TRUE) |
-        # case 2b: has only reusable categories and (stale) answer options
-        (has_answer_options == TRUE & has_reusable_categories == TRUE)
-    ) {
-
-        if (is.null(categories_df)) {
-
-            cli::cli_abort(
-                message = c(
-                    "x" = "No categories data frame provided in `categories_df`"
-                )
-            )
-
-        } else {
-
-            var_categories_df <- categories_df |>
-                dplyr::filter(.data$categories_id == categories_id_value)
-            
-            if (nrow(var_categories_df) == 0) {
-
-                cli::cli_abort(
-                    message = c(
-                        "x" = "Categories for `{varname_txt}` not found."
-                    )
-                )
-
-            } else {
-
-            # construct a named numeric vector
-            # - values are answer option codes
-            # - names are answer labels
-            val_lbls <- stats::setNames(
-                object = as.numeric(var_categories_df$value),
-                nm = var_categories_df$text
-            )
-
-            return(val_lbls)
-
-            }
-
-        }
-
-    # case 3: has no answer options, neither answers nor reusable categories
-    } else if (has_answer_options == FALSE & has_reusable_categories == FALSE) {
-
-        cli::cli_abort(
-            message = c(
-                "x" = "No answer options found.",
-                "i" = paste(
-                    "The questionnaire does not have any answer options",
-                    "associated with {.var {varname_txt}}",
-                    sep = " "
-                )
-            )
+    has_remaining_answer_options <- base::file(json_path) |>
+      jqr::jq(
+        glue::glue(
+          'any(
+            (
+              ..
+              | objects
+              | select(.VariableName == "<varname_txt>")
+              | .Answers[]
+            );
+            # note: using `AnswerValue` since `AnswerCode` not in older JSON
+            (.AnswerValue | tonumber | IN(<to_exclude_txt>) | not)
+          )
+          ',
+          .open = '<',
+          .close = '>'
         )
+      ) |>
+      jsonlite::fromJSON() 
+
+    if (has_remaining_answer_options == FALSE) {
+
+      cli::cli_abort(
+        message = c(
+          "x" = "No answers remain after excluding those in {.arg to_exclude}."
+        )
+      )
 
     }
+
+  }
+
+  # ============================================================================
+  # determine how/where to retrieve answer options
+  # ============================================================================
+
+  has_answers <- jqr::jq(
+    x = base::file(json_path),
+    glue::glue(
+      'any(
+        .. | objects | select(.VariableName == "<varname_txt>");
+        .Answers[]
+      )
+      ',
+      .open = '<',
+      .close = '>'
+    )
+  ) |>
+	jsonlite::fromJSON()
+
+  has_categories <- jqr::jq(
+    x = base::file(json_path),
+    glue::glue(
+      'any(
+        .. | objects | select(.VariableName == "<varname_txt>");
+        .CategoriesId != null
+      )
+      ',
+      .open = '<',
+      .close = '>'
+    )
+  ) |>
+	jsonlite::fromJSON()
+
+  if (has_categories == TRUE & has_answers == TRUE) {
+    cli::cli_abort(
+      message = c(
+        "x" = "Cannot resolve which answers to choose.",
+        "*" = "{varname_txt} has both answers and reusable categories.",
+        "*" = "The package currently does not handle this case.",
+        "i" = "Create an issue on GitHub that includes `document.json`."
+      )
+    )
+  }
+
+  # ============================================================================
+  # retrieve answer options
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # case 1: has answers
+  # ----------------------------------------------------------------------------
+
+  if (has_answers == TRUE) {
+
+    jq_expr <- glue::glue(
+      '
+      ..
+      | objects
+      | select(.VariableName == "<varname_txt>")
+      | .Answers
+      ',
+      .open = '<',
+      .close = '>'
+    )
+
+    answers_json <- jqr::jq(
+      x = base::file(json_path),
+      jq_expr
+    )
+
+    answers_df <- jsonlite::fromJSON(answers_json)
+
+    if (!is.null(to_exclude)) {
+
+      answers_df <- answers_df |>
+        dplyr::filter(!as.numeric(AnswerValue) %in% to_exclude)
+
+      if (nrow(answers_df) == 0) {
+        cli::cli_abort(
+          message = c(
+            "x" = "No answers remain after excluding those in `to_exclude`."
+          )
+        )
+      }
+
+    }
+
+    # note: using AnswerValue instead of AnswerCode
+    # because the latter is present in newer files
+    # while the former is present both in older and newer files
+    answers <- stats::setNames(
+      object = as.numeric(answers_df$AnswerValue),
+      nm = answers_df$AnswerText
+    )
+
+    return(answers)
+
+  }
+
+  # ----------------------------------------------------------------------------
+  # case 2: has categories
+  # ----------------------------------------------------------------------------
+
+  if (has_categories) {
+
+    jq_expr <- glue::glue(
+      '
+      ..
+      | objects
+      | select(.VariableName == "<varname_txt>")
+      | .CategoriesId
+      ',
+      .open = '<',
+      .close = '>'
+    )
+
+    categories_id <- base::file(json_path) |>
+      # extract categories
+	    jqr::jq(jq_expr) |>
+      # convert to R object
+      jsonlite::fromJSON() |>
+      # remove dashes
+      # in JSON, `CategoriesID` uses `-` in the GUID
+      # in the `Categories` directory, file names do not use the dash
+      # need to harmonize the naming system for the two
+      base::gsub(
+        pattern = "-",
+        replacement = ""
+      )
+
+    categories_df <- fs::path(categories_dir, paste0(categories_id, ".xlsx")) |>
+      parse_categories_file()
+
+    if (!is.null(to_exclude)) {
+
+      categories_df <- categories_df |>
+        dplyr::filter(!as.numeric(AnswerValue) %in% to_exclude)
+
+      if (nrow(categories_df) == 0) {
+        cli::cli_abort(
+          message = c(
+            "x" = "No answers remain after excluding those in {.arg to_exclude}."
+          )
+        )
+      }
+
+    }
+
+    answers <- stats::setNames(
+      object = as.numeric(categories_df$value),
+      nm = categories_df$text
+    )
+
+    return(answers)
+
+  }
 
 }
 

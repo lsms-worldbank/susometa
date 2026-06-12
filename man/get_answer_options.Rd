@@ -4,12 +4,15 @@
 \alias{get_answer_options}
 \title{Get answer options}
 \usage{
-get_answer_options(qnr_df, categories_df = NULL, varname, to_exclude = NULL)
+get_answer_options(json_path, categories_dir, varname, to_exclude = NULL)
 }
 \arguments{
-\item{qnr_df}{Data frame returned from \code{parse_questionnaire()}}
+\item{json_path}{Character. Full path to the Survey Solutions questionnaire
+JSON file (e.g., \verb{~/my_proj/path/to/document.json}).}
 
-\item{categories_df}{Data frame returned from \code{parse_categories()}}
+\item{categories_dir}{Character. Path to the \code{Categories} directory
+of metadata and/or where the \code{.xlsx} files containing reusable categories
+can be found.}
 
 \item{varname}{Variable name. Bare name of variable whose answer options to
 extract.}
