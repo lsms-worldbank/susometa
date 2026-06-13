@@ -412,6 +412,26 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of lookup tables
+#'
+#' @noRd
+jq_def_rename_lookup_tables <- '
+def rename_lookup_tables:
+{
+  # from ... to
+  "TableName": "lookup_table_name",
+  "FileName": "lookup_table_file_name",
+}
+as $renames |
+  # if a key is in the dictionary, rename it
+  # otherwise pass forward the key
+  with_entries(
+    if $renames[.key] != null then .key = $renames[.key] else . end
+  )
+;
+
+'
+
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key

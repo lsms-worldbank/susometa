@@ -1357,3 +1357,105 @@ get_attachments <- function(json_path) {
     jsonlite::fromJSON()
 
 }
+
+#' Get metadata on lookup tables.
+#'
+#' @description
+#' Extract metadata about translations from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame with the following columns:
+#'
+#' - `object_type`. Simple object type. Value: `lookup table`.
+#' - `lookup_table_id`. Character. GUID.
+#' - `lookup_table_name`. Character. Name as it appears in Designer.
+#' - `lookup_table_file_name`. Character. Name of file uploaded in Designer.
+#'
+#' @importFrom jqr jq
+#' @importFrom cli cli_abort
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_lookup_tables <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # check whether targets are present in the JSONS
+  # ============================================================================
+
+  # check target has non-empty content
+  lookup_tables_exist <- base::file(json_path) |>
+    jqr::jq(
+      '
+      # select top-level property
+      .LookupTables
+      # remove `$type` key-value pair, if present
+      # note: `del()` has no effect the key-value pair is not present
+      | del(."$type")
+      | any(length > 0)
+      '
+    ) |>
+    jsonlite::fromJSON()
+
+  if (lookup_tables_exist == FALSE) {
+    cli::cli_abort(
+      message = c(
+        "x" = "No lookup tables found for this questionnaire."
+      )
+    )
+  }
+
+  # ============================================================================
+  # compose query
+  # ============================================================================
+
+  jq_expr <- paste0(
+    # function definitions
+    jq_def_rename_lookup_tables,
+    jq_rename_from_pascal_to_snake_case,
+    # query
+    '
+    # select top-level property
+    .LookupTables
+    # remove `$type` key-value pair, if present
+    # note: `del()` has no effect the key-value pair is not present
+    | del(."$type")
+    # restructure the lookup table array so that it consists of a key and value entries
+    # as follows:
+    # [ "key": .key, "value": .value ]
+    # where `.value` is the initial content of each element in the lookup table array
+    | to_entries
+    # restructure each element of the lookup table array as follows:
+    # [ "lookup_table_id": .key, .value ]
+    # where `.value` is the value of the initial lookup table array
+    | map({ lookup_table_id: .key } + .value)
+    # rename keys
+    # note: using `map()` to apply function since objects are nested in an array
+    # because of earlier use of `map()`
+    # ... for known keys
+    | map(rename_lookup_tables)
+    # ... for unknown keys, from Pascal to snake case
+    | map(rename_from_pascal_to_snake_case)
+    # add text
+    | map(. + { "object_type": "lookup table" })
+    '
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  lookup_table_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  lookup_table_df <- jsonlite::fromJSON(lookup_table_json)
+
+}
