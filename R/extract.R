@@ -563,7 +563,7 @@ get_questions_by_section <- function(json_path) {
 #' @return Named numeric vector.
 #' Values are answer codes. Names are answer labels.
 #'
-#' @importFrom rlang as_label expr
+#' @importFrom rlang as_label expr .data
 #' @importFrom jqr jq
 #' @importFrom glue glue glue_collapse
 #' @importFrom jsonlite fromJSON
@@ -790,7 +790,7 @@ get_answer_options <- function(
     if (!is.null(to_exclude)) {
 
       answers_df <- answers_df |>
-        dplyr::filter(!as.numeric(AnswerValue) %in% to_exclude)
+        dplyr::filter(!as.numeric(.data$AnswerValue) %in% to_exclude)
 
       if (nrow(answers_df) == 0) {
         cli::cli_abort(
@@ -851,7 +851,7 @@ get_answer_options <- function(
     if (!is.null(to_exclude)) {
 
       categories_df <- categories_df |>
-        dplyr::filter(!as.numeric(AnswerValue) %in% to_exclude)
+        dplyr::filter(!as.numeric(.data$AnswerValue) %in% to_exclude)
 
       if (nrow(categories_df) == 0) {
         cli::cli_abort(

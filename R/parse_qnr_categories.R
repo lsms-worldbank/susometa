@@ -114,6 +114,7 @@ parse_categories <- function(
 #' @importFrom fs path_file path_ext_remove
 #' @importFrom readxl read_excel
 #' @importFrom dplyr mutate rename
+#' @importFrom rlang .env
 #' 
 #' @export
 parse_categories_file <- function(
@@ -156,6 +157,7 @@ parse_categories_file <- function(
 #' - `answer_text_*`. Text label of answer option.
 #' 
 #' @importFrom dplyr mutate row_number
+#' @importFrom rlang .data
 #' @importFrom tidyr pivot_wider
 #' 
 #' @export
@@ -196,6 +198,7 @@ reshape_categories <- function(categories_df) {
 #' joined/updated by `categories_id` key.
 #' 
 #' @importFrom dplyr mutate select starts_with all_of rows_update left_join
+#' @importFrom rlang .data
 #' @importFrom stringr str_replace_all
 #' 
 #' @export
