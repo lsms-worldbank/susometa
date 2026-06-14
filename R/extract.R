@@ -1536,3 +1536,77 @@ get_critical_rules <- function(json_path) {
   critical_rules_df <- jsonlite::fromJSON(critical_rules_json)
 
 }
+
+#' Get metadata on questionnaire document metadata.
+#'
+#' @description
+#' Extract metadata about the questionnaire itself from the questionnaire JSON
+#' file as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return List with named elements corresponding the metadata attributes.
+#'
+#' @importFrom jqr jq
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_qnr_metadata <- function(json_path) {
+
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # compose query
+  # ============================================================================
+
+  jq_expr <- paste0(
+    '
+    .
+    # delete immediate children
+    # arrays
+    | del(
+      .Children, .Macros, .CriticalRules, .LookupTables,
+      .Attachments, .Translations, .Categories, .FixedRosterTitles
+    )
+    # irrelevant keys (e.g., generic group keys)
+    | del(
+      .ConditionExpression, .IsRoster, .DisplayMode, .RosterSizeSource
+    )
+    # hoist keys from Metadata object to the main object
+    | . + {
+      "SubTitle": .Metadata.Subtitle?,
+      "Version": .Metadata.Version?,
+      "VersionNotes": .Metadata.VersionNotes?,
+      "KindOfData": .Metadata.KindOfData?,
+      "Country": .Metadata.Country?,
+      "Year": .Metadata.Year?,
+      "Language": .Metadata.Language?,
+      "Coverage": .Metadata.Coverage?,
+      "Universe": .Metadata.Universe?,
+      "UnitOfAnalysis": .Metadata.UnitOfAnalysis?,
+      "PrimaryInvestigator": .Metadata.PrimaryInvestigator?,
+      "Funding": .Metadata.Funding?,
+      "Consultant": .Metadata.Consultant?,
+      "ModeOfDataCollection": .Metadata.ModeOfDataCollection?,
+      "Notes": .Metadata.Notes?,
+      "Keywords": .Metadata.Keywords?,
+      "AgreeToMakeThisQuestionnairePublic": .Metadata.AgreeToMakeThisQuestionnairePublic?,
+    }
+    '
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  qnr_meta_df <- base::file(json_path) |>
+    jqr::jq(jq_expr) |>
+    jsonlite::fromJSON()
+
+}

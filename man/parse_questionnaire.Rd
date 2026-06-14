@@ -4,10 +4,10 @@
 \alias{parse_questionnaire}
 \title{Parses JSON questionnaire file into rectangular data frame}
 \usage{
-parse_questionnaire(path)
+parse_questionnaire(json_path)
 }
 \arguments{
-\item{path}{Complete file path to the questionnaire JSON file, typically named \code{document.json}}
+\item{json_path}{Complete file path to the questionnaire JSON file, typically named \code{document.json}}
 }
 \value{
 Data frame that contains all attributes of all objects in the questionnaire.
