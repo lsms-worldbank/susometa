@@ -1,0 +1,207 @@
+{
+  "$type": "QuestionnaireDocument",
+  "CoverPageSectionId": "1397921e-4705-4104-94ec-8f5fd134a3e1",
+  "Id": "f80d8d8c941546d2bfd0247a79c10b11",
+  "Revision": 16,
+  "Children": [
+    {
+      "$type": "Group",
+      "Children": [],
+      "ConditionExpression": "",
+      "HideIfDisabled": false,
+      "IsFlatMode": false,
+      "IsPlainMode": false,
+      "DisplayMode": 0,
+      "Enabled": true,
+      "Description": "",
+      "VariableName": "",
+      "IsRoster": false,
+      "CustomRosterTitle": false,
+      "RosterSizeSource": 0,
+      "FixedRosterTitles": [],
+      "PublicKey": "1397921e-4705-4104-94ec-8f5fd134a3e1",
+      "Title": "Cover"
+    },
+    {
+      "$type": "Group",
+      "Children": [
+        {
+          "$type": "TextQuestion",
+          "QuestionType": 7,
+          "Answers": [],
+          "Children": [],
+          "ConditionExpression": "",
+          "HideIfDisabled": false,
+          "Featured": false,
+          "Instructions": "",
+          "Properties": {
+            "$type": "QuestionProperties",
+            "HideInstructions": false,
+            "UseFormatting": false,
+            "GeometryType": 0,
+            "GeometryInputMode": 0,
+            "IsCritical": false
+          },
+          "PublicKey": "88a2c1ec-c44c-85ed-1112-9b53ae8e130e",
+          "QuestionScope": 0,
+          "QuestionText": "Not a critical question",
+          "StataExportCaption": "not_critical",
+          "VariableLabel": "",
+          "IsTimestamp": false,
+          "ValidationConditions": [],
+          "VariableName": "not_critical"
+        },
+        {
+          "$type": "TextQuestion",
+          "QuestionType": 7,
+          "Answers": [],
+          "Children": [],
+          "ConditionExpression": "",
+          "HideIfDisabled": false,
+          "Featured": false,
+          "Instructions": "",
+          "Properties": {
+            "$type": "QuestionProperties",
+            "HideInstructions": false,
+            "UseFormatting": false,
+            "GeometryType": 0,
+            "GeometryInputMode": 0,
+            "IsCritical": true
+          },
+          "PublicKey": "88664ee0-3292-f5c4-e1f1-67d54cf9b707",
+          "QuestionScope": 0,
+          "QuestionText": "Is a critical question",
+          "StataExportCaption": "is_critical",
+          "VariableLabel": "",
+          "IsTimestamp": false,
+          "ValidationConditions": [],
+          "VariableName": "is_critical"
+        },
+        {
+          "$type": "TextQuestion",
+          "QuestionType": 7,
+          "Answers": [],
+          "Children": [],
+          "ConditionExpression": "",
+          "HideIfDisabled": false,
+          "Featured": false,
+          "Instructions": "",
+          "Properties": {
+            "$type": "QuestionProperties",
+            "HideInstructions": false,
+            "UseFormatting": false,
+            "GeometryType": 0,
+            "GeometryInputMode": 0,
+            "IsCritical": true
+          },
+          "PublicKey": "6257d9a2-b2aa-4827-3b62-28a658cc97fa",
+          "QuestionScope": 0,
+          "QuestionText": "Another critical one",
+          "StataExportCaption": "another_critical_one",
+          "VariableLabel": "",
+          "IsTimestamp": false,
+          "ValidationConditions": [],
+          "VariableName": "another_critical_one"
+        },
+        {
+          "$type": "SingleQuestion",
+          "QuestionType": 0,
+          "ShowAsList": false,
+          "Answers": [
+            {
+              "$type": "Answer",
+              "AnswerText": "Yes",
+              "AnswerValue": "1",
+              "AnswerCode": 1.0,
+              "AttachmentName": ""
+            },
+            {
+              "$type": "Answer",
+              "AnswerText": "No",
+              "AnswerValue": "2",
+              "AnswerCode": 2.0
+            }
+          ],
+          "Children": [],
+          "ConditionExpression": "",
+          "HideIfDisabled": false,
+          "Featured": false,
+          "Instructions": "",
+          "Properties": {
+            "$type": "QuestionProperties",
+            "HideInstructions": false,
+            "UseFormatting": false,
+            "IsCritical": false
+          },
+          "PublicKey": "de6d92f7-771a-cc56-b4e4-65c2e390651e",
+          "QuestionScope": 0,
+          "QuestionText": "Agree?",
+          "StataExportCaption": "still_not_critical",
+          "VariableLabel": "",
+          "IsFilteredCombobox": false,
+          "IsTimestamp": false,
+          "ValidationConditions": [],
+          "VariableName": "still_not_critical"
+        }
+      ],
+      "ConditionExpression": "",
+      "HideIfDisabled": false,
+      "IsFlatMode": false,
+      "IsPlainMode": false,
+      "DisplayMode": 0,
+      "Enabled": true,
+      "Description": "",
+      "VariableName": "",
+      "IsRoster": false,
+      "CustomRosterTitle": false,
+      "RosterSizeSource": 0,
+      "FixedRosterTitles": [],
+      "PublicKey": "bf15501b-4e29-409a-9ab8-4a6173537523",
+      "Title": "New Section"
+    }
+  ],
+  "Macros": {
+    "$type": "System.Collections.Generic.Dictionary`2[[System.Guid, System.Private.CoreLib],[WB.Core.SharedKernels.SurveySolutions.Documents.Macro, WB.Core.SharedKernels.Questionnaire]], System.Private.CoreLib"
+  },
+  "CriticalRules": [
+    {
+      "$type": "CriticalRule",
+      "Id": "b4981445-1ed6-8dd4-1516-7a513f54ed26",
+      "Message": "You need to agree",
+      "Expression": "not_critical == \"agree\"",
+      "Description": ""
+    },
+    {
+      "$type": "CriticalRule",
+      "Id": "c4c0aec2-2958-9339-860c-e0306dd8d087",
+      "Message": "Must still not be critical",
+      "Expression": "still_not_critical == 1",
+      "Description": "Here's a description"
+    }
+  ],
+  "LookupTables": {
+    "$type": "System.Collections.Generic.Dictionary`2[[System.Guid, System.Private.CoreLib],[WB.Core.SharedKernels.SurveySolutions.Documents.LookupTable, WB.Core.SharedKernels.Questionnaire]], System.Private.CoreLib"
+  },
+  "Attachments": [],
+  "Translations": [],
+  "Categories": [],
+  "ConditionExpression": "",
+  "HideIfDisabled": false,
+  "CreationDate": "2026-06-02T22:32:33.6314692",
+  "LastEntryDate": "2026-06-02T22:35:16.1802968",
+  "IsDeleted": false,
+  "CreatedBy": "1a1ad512-a793-49f7-949d-7cd8e3efd3f2",
+  "IsPublic": false,
+  "PublicKey": "f80d8d8c-9415-46d2-bfd0-247a79c10b11",
+  "Title": "Critical rules in qnr",
+  "Description": "",
+  "VariableName": "critical_rules_in_qnr",
+  "IsRoster": false,
+  "DisplayMode": 0,
+  "RosterSizeSource": 0,
+  "FixedRosterTitles": [],
+  "LastEventSequence": 0,
+  "IsUsingExpressionStorage": false,
+  "CustomRosterTitle": false,
+  "IsCoverPageSupported": true
+}

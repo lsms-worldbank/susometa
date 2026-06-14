@@ -1459,3 +1459,80 @@ get_lookup_tables <- function(json_path) {
   lookup_table_df <- jsonlite::fromJSON(lookup_table_json)
 
 }
+
+#' Get metadata on critical rules.
+#'
+#' @description
+#' Extract metadata about critical rules from the questionnaire JSON
+#' as a data frame.
+#'
+#' @inheritParams get_sections
+#'
+#' @return Data frame.
+#'
+#' - `object_type`. Character. Simplified object type. Value: `critical rule`.
+#' - `type`. Character. Always `CriticalRule`.
+#' - `rule_id`. Character. GUID
+#' - `rule_message`. Character. Error message for the rule.
+#' - `rule_expression`. Character. Validation expression for the rule.
+#' - `rule_description`. Character. Optional description for the rule.
+#'
+#' @importFrom jqr jq
+#' @importFrom cli cli_abort
+#' @importFrom jsonlite fromJSON
+#'
+#' @export
+get_critical_rules <- function(json_path) {
+
+  # ============================================================================
+  # check inputs
+  # ============================================================================
+
+  # path
+  check_json_path(path = json_path)
+
+  # ============================================================================
+  # check whether targets are present in the JSONS
+  # ============================================================================
+
+  has_critical_rules <- base::file(json_path) |>
+    jqr::jq('any(.CriticalRules // []; length > 0)') |>
+    jsonlite::fromJSON()
+
+  if (has_critical_rules == FALSE) {
+    cli::cli_abort(
+      message = c(
+        "x" = "No critical rules found for the questionnaire."
+      )
+    )
+  }
+
+  # ============================================================================
+  # compose query
+  # ============================================================================
+
+  jq_expr <- paste0(
+    jq_def_rename_critical_rules,
+    jq_rename_from_pascal_to_snake_case,
+    '[
+      .CriticalRules[]
+      # rename keys
+      # ... known keys
+      | rename_critical_rules
+      # ... unknown keys
+      | rename_from_pascal_to_snake_case
+      # add object type attribute
+      | . + { "object_type": "critical rule" }
+    ]'
+  )
+
+  # ============================================================================
+  # get data
+  # ============================================================================
+
+  critical_rules_json <- base::file(json_path) |>
+    jqr::jq(jq_expr)
+
+  critical_rules_df <- jsonlite::fromJSON(critical_rules_json)
+
+}

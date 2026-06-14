@@ -432,6 +432,19 @@ as $renames |
 
 '
 
+#' jq expression to rename known keys of critical rules
+#'
+#' @noRd
+jq_def_rename_critical_rules <- '
+def rename_critical_rules:
+{
+  # from ... to
+  "$type": "type",
+  "Id": "rule_id",
+  "Message": "rule_message",
+  "Expression": "rule_expression",
+  "Description": "rule_description",
+}
 as $renames |
   # if a key is in the dictionary, rename it
   # otherwise pass forward the key
