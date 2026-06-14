@@ -538,7 +538,7 @@ get_questions_by_section <- function(json_path) {
 
   questions_by_sections <- sections_df |>
     # select common attributes only
-    dplyr::select(title, section_id = public_key) |>
+    dplyr::select("title", section_id = "public_key") |>
     # join questions to the section to which each belongs
     dplyr::left_join(questions_and_variables_df, by = "section_id")
 

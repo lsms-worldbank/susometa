@@ -136,7 +136,7 @@ parse_categories_file <- function(
             .before = 1
         ) |>
         # rename category ID column as value
-        dplyr::rename(value = .data$id)
+        dplyr::rename(value = "id")
 
     return(categories_df)
 
