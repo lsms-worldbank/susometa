@@ -892,42 +892,56 @@ get_answer_options <- function(
 #'
 #' @importFrom stats setNames
 #' @importFrom rlang as_label expr
-#' @importFrom stringr str_replace_all
 #'
 #' @export
 get_ms_answers_as_var_labels <- function(
-    qnr_df,
-    categories_df = NULL,
+    json_path,
+    categories_dir = NULL,
     varname,
     to_exclude = NULL
 ) {
 
-    # extract answer options
-    answer_options <- get_answer_options(
-        qnr_df = qnr_df,
-        varname = {{varname}},
-        categories_df = categories_df,
-        to_exclude = to_exclude
-    )
+  # ============================================================================
+  # check inputs
+  # ============================================================================
 
-    # create named vector, where:
-    # - names are variable names
-    # - values are text 
-    column_labels <- stats::setNames(
-        object = names(answer_options),
-        nm = paste0(
-            # construct variable name from: 
-            # - variable stub name
-            rlang::as_label(rlang::expr({{varname}})),
-            # - separator
-            "__",
-            # - value
-            # replace negative value (-) with "n"
-            stringr::str_replace_all(unname(answer_options), "-", "n")
-        )
-    )
+  # json_path
+  check_json_path(path = json_path)
 
-    return(column_labels)
+  # ============================================================================
+  # get answers
+  # ============================================================================
+
+  # extract answer options
+  answer_options <- get_answer_options(
+    json_path = json_path,
+    categories_dir = categories_dir,
+    varname = {{varname}},
+    to_exclude = to_exclude
+  )
+
+  # ============================================================================
+  # transform them into colum labels
+  # ============================================================================
+
+  # create named vector, where:
+  # - names are variable names
+  # - values are text 
+  column_labels <- stats::setNames(
+    object = names(answer_options),
+    nm = paste0(
+      # construct variable name from: 
+      # - variable stub name
+      rlang::as_label(rlang::expr({{varname}})),
+      # - separator
+      "__",
+      # - value
+      # replace negative value (-) with "n"
+      gsub(x = unname(answer_options), pattern = "-", replacement = "n", fixed = TRUE)
+    )
+  )
+
+  return(column_labels)
 
 }
 
