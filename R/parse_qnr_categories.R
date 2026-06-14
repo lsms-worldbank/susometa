@@ -113,7 +113,7 @@ parse_categories <- function(
 #' 
 #' @importFrom fs path_file path_ext_remove
 #' @importFrom readxl read_excel
-#' @importFrom dplyr %>% mutate rename
+#' @importFrom dplyr mutate rename
 #' 
 #' @export
 parse_categories_file <- function(
@@ -121,19 +121,19 @@ parse_categories_file <- function(
     sheet = "Categories"
 ) {
 
-    category_id <- fs::path_file(path) %>%
+    category_id <- fs::path_file(path) |>
         fs::path_ext_remove()
 
     # injest questionnaire file
     categories_df <- readxl::read_excel(
             path = path,
             sheet = sheet
-        ) %>%
+        ) |>
         # add the category GUID before first column
         dplyr::mutate(
             categories_id = .env$category_id,
             .before = 1
-        ) %>%
+        ) |>
         # rename category ID column as value
         dplyr::rename(value = .data$id)
 
@@ -155,15 +155,15 @@ parse_categories_file <- function(
 #' - `answer_value_*`. Value of answer option.
 #' - `answer_text_*`. Text label of answer option.
 #' 
-#' @importFrom dplyr %>% mutate row_number
+#' @importFrom dplyr mutate row_number
 #' @importFrom tidyr pivot_wider
 #' 
 #' @export
 reshape_categories <- function(categories_df) {
 
-    df_reshaped <- categories_df %>%
+    df_reshaped <- categories_df |>
         # add a within-group index
-        dplyr::mutate(n = dplyr::row_number(), .by = .data$categories_id) %>%
+        dplyr::mutate(n = dplyr::row_number(), .by = .data$categories_id) |>
         # pivot to a data frame composed of:
         # - category_id
         # - answer_value_*
@@ -173,7 +173,7 @@ reshape_categories <- function(categories_df) {
             names_from = .data$n,
             values_from = c(.data$text, .data$value),
             names_glue = "answer_{.name}"
-        ) %>%
+        ) |>
         # coerce columns to character so that they match the questionnaire JSON
         # if not done, `answer_value_*` will be numeric
         dplyr::mutate(
@@ -195,7 +195,7 @@ reshape_categories <- function(categories_df) {
 #' @return Data frame. Same structure as `qnr_json_df`, but with categories
 #' joined/updated by `categories_id` key.
 #' 
-#' @importFrom dplyr %>% mutate select starts_with all_of rows_update left_join
+#' @importFrom dplyr mutate select starts_with all_of rows_update left_join
 #' @importFrom stringr str_replace_all
 #' 
 #' @export
@@ -206,7 +206,7 @@ join_categories <- function(
 
     # create a `categories_id` in JSON file without the hyphens
     # so that this key can be used to merge with `categories_df`
-    qnr_json_df <- qnr_json_df %>%
+    qnr_json_df <- qnr_json_df |>
         dplyr::mutate(
             categories_id_original = .data$categories_id,
             categories_id = stringr::str_replace_all(
@@ -218,7 +218,7 @@ join_categories <- function(
 
     # construct df from JSON data that contains same family of columns
     # as categories_df, in order to facilitate comparison of column names
-    json_categories <- qnr_json_df %>%
+    json_categories <- qnr_json_df |>
         dplyr::select(
             # entity ID
             .data$public_key,
@@ -240,7 +240,7 @@ join_categories <- function(
     # create data sets
 
     # core json cols that do not overlap with categories
-    json_core <- qnr_json_df %>%
+    json_core <- qnr_json_df |>
         dplyr::select(
             !c(
                 dplyr::starts_with("answer_text_"), 
@@ -249,64 +249,64 @@ join_categories <- function(
         )
 
     # common data
-    json_common_df <- qnr_json_df %>%
+    json_common_df <- qnr_json_df |>
         dplyr::select(
             .data$public_key,
             dplyr::all_of(cols_in_both)
         )
-    categories_common_df <- categories_df %>%
+    categories_common_df <- categories_df |>
         dplyr::select(dplyr::all_of(cols_in_both))
     
     # unique data
-    json_unique_df <- qnr_json_df %>%
+    json_unique_df <- qnr_json_df |>
         dplyr::select(
             .data$public_key,
             .data$categories_id,
             dplyr::all_of(cols_in_json_only)
         )
-    categories_unique_df <- categories_df %>%
+    categories_unique_df <- categories_df |>
         dplyr::select(
             .data$categories_id,
             dplyr::all_of(cols_in_categories_only)
         )
 
     # patch common data
-    patched_categories_df <- json_common_df %>%
+    patched_categories_df <- json_common_df |>
         dplyr::rows_update(
             categories_common_df,
             by = "categories_id"
         )
 
     # join together all pieces by their common key: categories_id
-    combined_df <- json_core %>%
+    combined_df <- json_core |>
         # json core and patched
         dplyr::left_join(
             patched_categories_df, 
             by = c("public_key", "categories_id")
-        ) %>%
+        ) |>
         # unique columns from json and categories data
-        {
+        (\(x)
             if (ncol(json_unique_df) > 0)  {
                 dplyr::left_join(
-                    ., json_unique_df,
+                    x, json_unique_df,
                     by = c("public_key", "categories_id")
                 )
             } else {
-                .
+                x
             }
             
-        } %>%
-        {
+        )() |>
+        (\(x)
             if (ncol(categories_unique_df) > 0) {
                 dplyr::left_join(
-                    ., categories_unique_df, 
+                    x, categories_unique_df, 
                     by = "categories_id",
                     relationship = "many-to-one"
                 )
             } else {
-                .
+                x
             }
-        } %>%
+        )() |>
         # revert to original categories_id column
         dplyr::mutate(
             # overwrite column with UUID containing dashes
