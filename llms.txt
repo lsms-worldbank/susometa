@@ -1,0 +1,99 @@
+# susometa
+
+The susometa package provides functions to:
+
+- Parse Survey Solutions’ questionnaire metadata from JSON file to
+  rectangular data frame
+- Extract questionnaire objects and their attributes (e.g., sections,
+  rosters, questions, answer options, etc.)
+
+## Installation
+
+Since susometa is not yet available on CRAN, it can be installed from
+GitHub as follows:
+
+``` r
+
+if (!require("pak")) install.packages("pak")
+pak::pak("lsms-worldbank/susometa")
+```
+
+# Package index
+
+## Questionnaire
+
+Functions for getting full questionnaire content or questionnaire
+metadata.
+
+- [`parse_questionnaire()`](https://lsms-worldbank.github.io/susometa/reference/parse_questionnaire.md)
+  : Parses JSON questionnaire file into rectangular data frame
+- [`get_qnr_metadata()`](https://lsms-worldbank.github.io/susometa/reference/get_qnr_metadata.md)
+  : Get metadata on questionnaire document metadata.
+
+## Groups
+
+Get metadata about groups that contain questions
+
+- [`get_sections()`](https://lsms-worldbank.github.io/susometa/reference/get_sections.md)
+  : Get metadata for section.
+- [`get_sub_sections()`](https://lsms-worldbank.github.io/susometa/reference/get_sub_sections.md)
+  : Get metadata for sub-sections
+- [`get_rosters()`](https://lsms-worldbank.github.io/susometa/reference/get_rosters.md)
+  : Get metadata about rosters.
+
+## Content
+
+Get metadata about questions, variables, and static text
+
+- [`get_questions()`](https://lsms-worldbank.github.io/susometa/reference/get_questions.md)
+  : Get metadata for questions
+- [`get_variables()`](https://lsms-worldbank.github.io/susometa/reference/get_variables.md)
+  : Get metadata for computed variables.
+- [`get_questions_by_section()`](https://lsms-worldbank.github.io/susometa/reference/get_questions_by_section.md)
+  : Get questions with the section to which each belongs.
+- [`get_static_texts()`](https://lsms-worldbank.github.io/susometa/reference/get_static_texts.md)
+  : Get metadata on static text.
+- [`get_validations()`](https://lsms-worldbank.github.io/susometa/reference/get_validations.md)
+  : Get metadata for validations
+
+## Answer options
+
+Get answer options, however they are defined in Designer– whether
+
+- [`get_answer_options()`](https://lsms-worldbank.github.io/susometa/reference/get_answer_options.md)
+  : Get answer options
+- [`get_ms_answers_as_var_labels()`](https://lsms-worldbank.github.io/susometa/reference/get_ms_answers_as_var_labels.md)
+  : Get mutli-select answers as variable labels
+
+## Resources
+
+- [`get_macros()`](https://lsms-worldbank.github.io/susometa/reference/get_macros.md)
+  : Get metadata for macros.
+- [`get_categories()`](https://lsms-worldbank.github.io/susometa/reference/get_categories.md)
+  : Get metadata on categories.
+- [`get_translations()`](https://lsms-worldbank.github.io/susometa/reference/get_translations.md)
+  : Get metadata about translations.
+- [`get_attachments()`](https://lsms-worldbank.github.io/susometa/reference/get_attachments.md)
+  : Get metadata on attachments
+- [`get_lookup_tables()`](https://lsms-worldbank.github.io/susometa/reference/get_lookup_tables.md)
+  : Get metadata on lookup tables.
+- [`get_critical_rules()`](https://lsms-worldbank.github.io/susometa/reference/get_critical_rules.md)
+  : Get metadata on critical rules.
+
+## Parsing tools
+
+Low-level tools for parsing questionnaire metadata
+
+### Reusable categories
+
+- [`find_categories()`](https://lsms-worldbank.github.io/susometa/reference/find_categories.md)
+  : Find paradata files
+- [`parse_categories()`](https://lsms-worldbank.github.io/susometa/reference/parse_categories.md)
+  : Parse all categories files into a single data frame
+- [`parse_categories_file()`](https://lsms-worldbank.github.io/susometa/reference/parse_categories_file.md)
+  : Parse a categories file
+- [`reshape_categories()`](https://lsms-worldbank.github.io/susometa/reference/reshape_categories.md)
+  : Reshape categories data
+- [`join_categories()`](https://lsms-worldbank.github.io/susometa/reference/join_categories.md)
+  : Join questionnaire metadata and categories metadata
+
