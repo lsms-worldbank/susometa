@@ -1,3 +1,23 @@
+# susometa 0.4.0
+
+## Breaking changes
+
+- **Workflow changes.** In previous versions, the workflow was two-step: first, parse the questionnaire JSON file into a data frame; then, extract target content from that questionnaire data frame. Now, the workflow is a single step: extract the target content from the JSON.
+- **API changes.** In line with the workflow changes, the argument `qnr_df`, the questionnaire data frame, has now been changed to `json_path`, the path to the questionnaire JSON.
+
+## Improvements
+
+- Use a faster engine to parse JSON. In particular, move from `tidyjson` to `jqr`, a wrapper around `jq`, a library for filtering and mutating JSON data.
+- Add functions to extract new content from the questionnaire JSON:
+  - Static texts: `get_static_texts()`
+  - Macros: `get_macros()`
+  - Categories: `get_categories()`
+  - Translations: `get_translations()`
+  - Attachments: `get_attachments()`
+  - Lookup tables: `get_lookup_tables()`
+  - Critical rules: `get_critical_rules()`
+  - Questionnaire-level metadata: `get_qnr_metadata()`
+
 # susometa 0.3.2
 
 - Revert check that `varname` parameter in `get_answer_options` is a bare name, since not working correctly when called by other functions.
