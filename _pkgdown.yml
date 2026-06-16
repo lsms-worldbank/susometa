@@ -1,23 +1,22 @@
 url: https://lsms-worldbank.github.io/susometa/
 template:
   bootstrap: 5
-
 reference:
 - title: Questionnaire
-  desc: >
+  desc: |
     Functions for getting full questionnaire content or questionnaire metadata.
   contents:
   - parse_questionnaire
   - get_qnr_metadata
 - title: Groups
-  desc: >
+  desc: |
     Get metadata about groups that contain questions
   contents:
   - get_sections
   - get_sub_sections
   - get_rosters
 - title: Content
-  desc: >
+  desc: |
     Get metadata about questions, variables, and static text
   contents:
   - get_questions
@@ -26,9 +25,8 @@ reference:
   - get_static_texts
   - get_validations
 - title: Answer options
-  desc: >
-    Get answer options, however they are defined in Designer--
-    whether
+  desc: |
+    Get answer options, however they are defined in Designer-- whether
   contents:
   - get_answer_options
   - get_ms_answers_as_var_labels
@@ -41,7 +39,7 @@ reference:
   - get_lookup_tables
   - get_critical_rules
 - title: Parsing tools
-  desc: >
+  desc: |
     Low-level tools for parsing questionnaire metadata
 - subtitle: Reusable categories
   contents:
@@ -50,3 +48,4 @@ reference:
   - parse_categories_file
   - reshape_categories
   - join_categories
+
