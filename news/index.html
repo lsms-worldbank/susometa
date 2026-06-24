@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">susometa</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,9 +29,19 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/lsms-worldbank/susometa/blob/v0.4.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/lsms-worldbank/susometa/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.1" id="susometa-041">susometa 0.4.1<a class="anchor" aria-label="anchor" href="#susometa-041"></a></h2>
+<ul><li>Ensure that survey object extraction functions always return the same core columns. Previously, functions extracted data for the JSON keys that were present in the JSON fil. Now, functions create a column even for keys that are not present.</li>
+<li>Add overlooked question attributes:
+<ul><li>For single-select questions: <code>show_as_list_threshold</code> and <code>cascade_from_question_id</code>
+</li>
+<li>For list questions, <code>max_answer_count</code>
+</li>
+</ul></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="susometa-040">susometa 0.4.0<a class="anchor" aria-label="anchor" href="#susometa-040"></a></h2>
 <div class="section level3">

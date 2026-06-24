@@ -1,5 +1,16 @@
 # Changelog
 
+## susometa 0.4.1
+
+- Ensure that survey object extraction functions always return the same
+  core columns. Previously, functions extracted data for the JSON keys
+  that were present in the JSON fil. Now, functions create a column even
+  for keys that are not present.
+- Add overlooked question attributes:
+  - For single-select questions: `show_as_list_threshold` and
+    `cascade_from_question_id`
+  - For list questions, `max_answer_count`
+
 ## susometa 0.4.0
 
 ### Breaking changes
