@@ -285,6 +285,8 @@ def rename_question_attribs:
   # ----------------------------------------------------------------------------
 
   "ShowAsList": "show_as_list",
+  "ShowAsListThreshold": "show_as_list_threshold",
+  "CascadeFromQuestionId": "cascade_from_question_id",
 
   # ----------------------------------------------------------------------------
   # multi-select
@@ -313,6 +315,12 @@ def rename_question_attribs:
   # ----------------------------------------------------------------------------
 
   "Mask": "mask",
+
+  # ----------------------------------------------------------------------------
+  # list
+  # ----------------------------------------------------------------------------
+
+  "MaxAnswerCount": "max_answer_count",
 
 }
 as $renames |
