@@ -217,11 +217,16 @@ def rename_group_attribs:
 }
 # store them in a renames variable for easy access
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 '
 
@@ -311,11 +316,16 @@ def rename_question_attribs:
 
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+ # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -336,11 +346,16 @@ def rename_variable_attribs:
   "VariableName": "varname"
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -359,11 +374,16 @@ def rename_static_text:
   "HideIfDisabled": "hide_if_disabled"
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -381,11 +401,16 @@ def rename_macros:
   "Content": "macro_content",
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -403,11 +428,16 @@ def rename_attachments:
   "ContentId": "attachment_content_id",
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -423,11 +453,16 @@ def rename_lookup_tables:
   "FileName": "lookup_table_file_name",
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '
@@ -446,11 +481,16 @@ def rename_critical_rules:
   "Description": "rule_description",
 }
 as $renames |
-  # if a key is in the dictionary, rename it
+  # derive a null-filled template from the rename VALUES (snake_case names)
+  ([$renames | to_entries[] | {(.value): null}] | add) as $template |
+  # step 1: if a key is in the dictionary, rename it
   # otherwise pass forward the key
   with_entries(
     if $renames[.key] != null then .key = $renames[.key] else . end
-  )
+  ) |
+  # step 2: create entries with null values for keys present in the dictionary
+  # but missing from the JSON file
+  $template + .
 ;
 
 '

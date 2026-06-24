@@ -38,9 +38,17 @@ testthat::test_that("errors if `json_path` points to non-json file", {
 
 testthat::test_that("returns data frame with expected columns", {
 
+  # questionnaire JSON fixture with all possible keys present
   questions_df <- get_questions(
     json_path = testthat::test_path(
       "fixtures", "qnr_metadata", "document.json"
+    )
+  )
+
+  # questionnaire JSON fixture with some keys missing
+  questions_df_wo_linked_cols <- get_questions(
+    json_path = testthat::test_path(
+      "fixtures", "qnr_metadata", "critical_rules_qnr.json"
     )
   )
 
@@ -103,6 +111,11 @@ testthat::test_that("returns data frame with expected columns", {
 
     )
 
+  )
+
+  # has all core variable attributes, even those not present in the JSON
+  testthat::expect_true(
+    all(question_col_names_expected %in% names(questions_df_wo_linked_cols))
   )
 
   testthat::expect_true(
